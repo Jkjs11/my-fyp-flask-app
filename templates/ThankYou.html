@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='Register.css') }}">
+    <title>Thank You</title>
+
+    <audio id="buttonClickSound" src="{{ url_for('static', filename='audio/ButtonClickSound.mp3') }}"></audio>
+
+    <script>
+        const sound = document.getElementById('buttonClickSound');
+
+        function playClickSound(url) {
+            sound.pause(); // Stop the sound
+            sound.currentTime = 0; // Reset to start
+
+            sound.play().catch(error => {
+                console.error("Audio playback failed:", error);
+            });
+
+            if (url) {
+                sound.onended = function () {
+                    window.location.href = url; // Open in the same tab after sound ends
+                };
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('a').forEach(anchor => {
+                anchor.addEventListener('click', function (event) {
+                    event.preventDefault(); // Prevent default action to allow sound to play
+                    const url = anchor.href; // Get the href from the clicked anchor
+                    playClickSound(url);
+                });
+            });
+        });
+    </script>
+    
+    <style>
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            flex-direction: row;
+            gap: 50px;
+            margin: 20px;
+        }
+        .item {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Thank You for Registering!</h1>
+    <h3>Your registration was successful.</h3>
+
+    <div class="container">
+        <div class="item">
+            <a href="/">
+                <img src="{{ url_for('static', filename='images/Homepage.png') }}" alt="Go Back to Homepage" height="100" width="100">
+                <br>
+                <button type="button" style="cursor: pointer;">Homepage</button>
+            </a>
+        </div>
+
+        <div class="item">
+            <a href="/AboutUs">
+                <img src="{{ url_for('static', filename='images/AboutUs.png') }}" alt="Go to About Us" height="100" width="100">
+                <br>
+                <button type="button" style="cursor: pointer;">About Us</button>
+            </a>
+        </div>
+
+        <div class="item">
+            <a href="/Login">
+                <img src="{{ url_for('static', filename='images/Login.png') }}" alt="Login" height="100" width="100">
+                <br>
+                <button type="button" style="cursor: pointer;">Login</button>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

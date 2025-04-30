@@ -1,0 +1,40 @@
+html, body {
+    height: 100%; /* Ensures full height */
+    width: 100%; /* Ensures full width */
+    margin: 0;    /* Removes default margin */
+}
+
+body { 
+    background: url('/static/images/homepage_bg.png') no-repeat center center;
+    background-size: cover;
+    text-align: center;
+    font-family: cursive;
+} 
+
+h1, h1, h3 { 
+    color: black; 
+    font-family: cursive;
+} 
+
+button {
+    color:white;
+    background-color: darkblue;
+    width: 200px;      /* Set width */
+    height: 50px;     /* Set height */
+    font-size: 30px;  /* Set font size */
+    font-family: cursive;
+    border-radius: 50px;
+}
+
+.shake {
+    display: inline-block;
+    animation: shake 1s infinite;
+}
+
+@keyframes shake {
+    0% { transform: translate(0, 2px); }   /* Move down */
+    25% { transform: translate(0, -2px); }  /* Move up */
+    50% { transform: translate(0, 2px); }   /* Move down */
+    75% { transform: translate(0, -2px); }  /* Move up */
+    100% { transform: translate(0, 2px); }   /* Move down */
+}

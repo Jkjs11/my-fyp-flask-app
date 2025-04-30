@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercises Management Page</title>
+
+    <!-- Audio for button click sound -->
+    <audio id="buttonClickSound" src="{{ url_for('static', filename='audio/ButtonClickSound.mp3') }}" preload="auto"></audio>
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='teacher_exercise_page.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Exercises Management Page</h1>
+        <button id="logoutButton" onclick="logoutAndPlaySound()" title="Logout">
+            <i class="fas fa-sign-out-alt"></i>
+        </button>
+    </header>
+
+    <!-- Section for Topics -->
+    <div class="section" id="topics-section">
+        <h2>Topics</h2>
+        <div id="topics-container"></div>
+    </div>
+
+    <!-- Section for Exercises -->
+    <div class="section hidden" id="exercise-section">
+        <button onclick="goBackToTopics(); playClickSound()">Back to Topics</button>
+        <h2 id="selected-topic-title"></h2>
+        <div id="exercise-list" class="exercise-list"></div>
+
+        <h3>Add Exercises</h3>
+        <input type="text" id="question" placeholder="Question" />
+        <input type="file" id="question-image" accept="image/*" onchange="previewImage()" />
+        <div id="image-preview-container" style="display: none;">
+            <img id="image-preview" style="max-width: 300px; max-height: 200px;" />
+            <button onclick="clearImagePreview(); playClickSound()">Remove Image</button>
+        </div>
+
+        <input type="text" id="option1" placeholder="Option 1" />
+        <input type="text" id="option2" placeholder="Option 2" />
+        <input type="text" id="option3" placeholder="Option 3" />
+        <input type="text" id="option4" placeholder="Option 4" />
+        <select id="correct-option">
+            <option value="0">A</option>
+            <option value="1">B</option>
+            <option value="2">C</option>
+            <option value="3">D</option>
+        </select>
+        <button onclick="addExercise(); playClickSound()">Add Exercise</button>
+    </div>
+
+    <script>
+        let currentTopicIndex = 0;
+        let currentImageBase64 = null;
+
+        function displayTopics() {
+            const topicsContainer = document.getElementById("topics-container");
+            topicsContainer.innerHTML = "";
+            for (let i = 1; i <= 8; i++) {
+                const topicButton = document.createElement("button");
+                topicButton.innerText = `Topic ${i}`;
+                topicButton.onclick = () => openTopic(i);
+                topicsContainer.appendChild(topicButton);
+            }
+        }
+
+        function openTopic(topicIndex) {
+            currentTopicIndex = topicIndex;
+            document.getElementById("topics-section").classList.add("hidden");
+            document.getElementById("exercise-section").classList.remove("hidden");
+            document.getElementById("selected-topic-title").innerText = `Topic ${topicIndex}`;
+            displayExercises();
+        }
+
+        function displayExercises() {
+            fetch(`/get_exercises?topic_index=${currentTopicIndex}`, {
+                method: 'GET',
+            })
+            .then(response => response.json())
+            .then(data => {
+                const exerciseList = document.getElementById("exercise-list");
+                exerciseList.innerHTML = "<h3>Saved Exercises:</h3>";
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                const exercises = data.exercises;
+                if (exercises.length === 0) {
+                    exerciseList.innerHTML += "<p class='no-exercises'>No exercises added yet.</p>";
+                    return;
+                }
+                exercises.forEach((exercise, i) => {
+                    const div = document.createElement("div");
+                    div.className = "exercise-item";
+                    div.innerHTML = `
+                        <strong>Q${i + 1}:</strong> ${exercise.question ? exercise.question : ''}<br>
+                        ${exercise.question_image ? `<img src="${exercise.question_image}" alt="Question Image" style="max-width: 300px; max-height: 200px;"><br>` : ''}
+                        <strong>Options:</strong>
+                        <ul>
+                            <li>A. ${exercise.options[0]}</li>
+                            <li>B. ${exercise.options[1]}</li>
+                            <li>C. ${exercise.options[2]}</li>
+                            <li>D. ${exercise.options[3]}</li>
+                        </ul>
+                        <strong>Correct Answer:</strong> Option ${String.fromCharCode(65 + parseInt(exercise.correct_option))}
+                    `;
+                    const deleteButton = document.createElement("button");
+                    deleteButton.classList.add("delete-btn");
+                    deleteButton.innerText = "Delete";
+                    deleteButton.onclick = () => deleteExercise(exercise.exercise_id);
+                    div.appendChild(deleteButton);
+                    exerciseList.appendChild(div);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function previewImage() {
+            const fileInput = document.getElementById('question-image');
+            const previewContainer = document.getElementById('image-preview-container');
+            const previewImage = document.getElementById('image-preview');
+            
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    currentImageBase64 = e.target.result;
+                    previewContainer.style.display = 'block';
+                }
+                
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        }
+
+        function clearImagePreview() {
+            document.getElementById('question-image').value = '';
+            document.getElementById('image-preview').src = '';
+            document.getElementById('image-preview-container').style.display = 'none';
+            currentImageBase64 = null;
+        }
+
+        function addExercise() {
+            const question = document.getElementById("question").value.trim();
+            const options = [
+                document.getElementById("option1").value.trim(),
+                document.getElementById("option2").value.trim(),
+                document.getElementById("option3").value.trim(),
+                document.getElementById("option4").value.trim()
+            ];
+            const correctOption = parseInt(document.getElementById("correct-option").value);
+
+            if (!question && !currentImageBase64) {
+                alert("Please provide either a question text or an image.");
+                return;
+            }
+
+            if (options.some(opt => opt === "")) {
+                alert("Please fill all option fields.");
+                return;
+            }
+
+            const exercise = {
+                topic_index: currentTopicIndex,
+                question,
+                options,
+                correct_option: correctOption
+            };
+
+            if (currentImageBase64) {
+                exercise.question_image = currentImageBase64;
+            }
+
+            saveExerciseToDB(exercise);
+        }
+
+        function saveExerciseToDB(exercise) {
+            fetch('/save_exercise', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(exercise),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    alert("Exercise saved successfully.");
+                    clearExerciseForm();
+                    displayExercises();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function deleteExercise(exerciseId) {
+            if (confirm("Are you sure you want to delete this exercise?")) {
+                fetch('/delete_exercise', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ exercise_id: exerciseId }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        alert("Exercise deleted successfully.");
+                        displayExercises();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        }
+
+        function clearExerciseForm() {
+            document.getElementById("question").value = "";
+            document.getElementById("option1").value = "";
+            document.getElementById("option2").value = "";
+            document.getElementById("option3").value = "";
+            document.getElementById("option4").value = "";
+            document.getElementById("correct-option").value = "0";
+            clearImagePreview();
+        }
+
+        function playClickSound() {
+            const sound = document.getElementById("buttonClickSound");
+            sound?.play();
+        }
+
+        function logoutAndPlaySound() {
+            playClickSound();
+            alert("You have logged out successfully.");
+            window.location.href = '/';
+        }
+
+        function goBackToTopics() {
+            document.getElementById("exercise-section").classList.add("hidden");
+            document.getElementById("topics-section").classList.remove("hidden");
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            displayTopics();
+        });
+    </script>
+</body>
+</html>

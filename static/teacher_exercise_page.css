@@ -1,0 +1,128 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    background-image: url('/static/images/exercisespage_bg.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+header {
+    background-color: darkblue;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    height: 60px;
+}
+
+h1 {
+    margin: 0;
+    text-align: center;
+    flex-grow: 1;
+}
+
+.section {
+    margin: 20px auto;
+    width: 90%;
+    max-width: 400px;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+button {
+    margin: 5px;
+    padding: 10px;
+    font-size: 16px;
+    background-color: #0047ab;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #003580;
+}
+
+input, select {
+    margin: 10px 0;
+    width: calc(100% - 20px);
+    padding: 10px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+.hidden {
+    display: none;
+}
+
+.exercise-list {
+    margin: 10px 0;
+    text-align: left;
+}
+
+.exercise-item {
+    border: 1px solid #ccc;
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 4px;
+    position: relative;
+}
+
+.no-exercises {
+    color: gray;
+    font-style: italic;
+}
+
+#topics-container button {
+    width: 100%;
+    padding: 15px;
+    font-size: 18px;
+    background-color: #0047ab;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 5px 0;
+}
+
+#topics-container button:hover {
+    background-color: #003580;
+}
+
+.delete-btn {
+    display: block;
+    margin-top: 10px;
+    background-color: red;
+    color: white;
+    padding: 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.delete-btn:hover {
+    background-color: #b22a2a;
+}
+
+#logoutButton {
+    font-size: 32px;
+    background-color: transparent;
+    color: white;
+    border: none;
+    cursor: pointer;
+    padding: 10px;
+    transition: color 0.3s ease, transform 0.3s ease;
+}
+
+#logoutButton:hover {
+    color: lightblue;
+    transform: scale(1.1);
+}

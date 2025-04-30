@@ -1,0 +1,19 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0; /* Added to ensure no extra spacing */
+    overflow: hidden; /* Prevent scrolling if image is exactly viewport size */
+}
+
+body {
+    text-align: center;
+    background-color: transparent; /* Ensure no background color interferes */
+}
+
+.full-page-image {
+    width: 100%;
+    height: 100%;
+    object-fit: 100%; /* Ensures full image is visible without distortion */
+    display: block; /* Removes any inline spacing */
+    margin: 0 auto; /* Centers the image */
+}

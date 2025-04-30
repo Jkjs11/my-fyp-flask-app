@@ -1,0 +1,163 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    background-image: url('/static/images/notespage_bg.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+header {
+    background-color: darkblue;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    height: 60px;
+}
+
+h1 {
+    margin: 0;
+    text-align: center;
+    flex-grow: 1;
+    color: white;
+    width: 100%;
+}
+
+h2 {
+    text-align: center;
+    color: black;
+    width: 100%;
+}
+
+p {
+    text-align: center;
+    font-family: 'Times New Roman', Times, serif;
+    color: darkblue;
+    width: 100%;
+}
+
+.container {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    border-radius: 8px;
+}
+
+.topic {
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.topic h3 {
+    margin: 10px 0;
+}
+
+.topic button {
+    padding: 10px 20px;
+    margin: 5px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 50px;
+    font-size: 14px;
+}
+
+.topic button.delete {
+    background-color: #f44336;
+}
+
+.topic button:hover {
+    background-color: #45a049;
+}
+
+.topic button.delete:hover {
+    background-color: #e53935;
+}
+
+.button-container {
+    margin-bottom: 15px;
+}
+
+.upload-input {
+    display: none;
+}
+
+.uploaded-video {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+}
+
+.video-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 400px;
+}
+
+.video-item video {
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.video-item button {
+    margin-top: 5px;
+    padding: 8px 15px;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.teacher_exercise_page-link {
+    margin-top: 20px;
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: darkblue;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.teacher_exercise_page-link:hover {
+    background-color: darkblue;
+}
+
+#logoutButton {
+    font-size: 32px;
+    background-color: transparent;
+    color: white;
+    border: none;
+    cursor: pointer;
+    padding: 10px;
+    transition: color 0.3s ease, transform 0.3s ease;
+}
+
+#logoutButton:hover {
+    color: lightblue;
+    transform: scale(1.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .video-item {
+        max-width: 300px;
+    }
+}

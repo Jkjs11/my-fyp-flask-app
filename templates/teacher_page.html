@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Notes Management Page</title>
+
+    <!-- Audio for button click sound -->
+    <audio id="buttonClickSound" src="{{ url_for('static', filename='audio/ButtonClickSound.mp3') }}" style="display: none;"></audio>
+    
+    <!-- FontAwesome for logout icon -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='teacher_page.css') }}">
+</head>
+<body>
+
+<header>
+    <h1>Video Notes Management Page</h1>
+    <!-- Logout Icon -->
+    <button id="logoutButton" onclick="logout();" aria-label="Logout">
+        <i class="fas fa-sign-out-alt"></i>
+    </button>
+</header>
+
+<div class="container">
+    <div id="topics-container">
+        <!-- Topics will be dynamically generated here -->
+    </div>
+    
+    <!-- Link to the exercise page -->
+    <a href="{{ url_for('teacher_exercise_page') }}" id="exercisePageLink" class="teacher_exercise_page-link" target="_blank" onclick="playClickSound();">Go to Exercises Management Page</a>
+</div>
+
+
+
+<script>
+    const topics = [
+        'Topic 1', 'Topic 2', 'Topic 3', 'Topic 4', 
+        'Topic 5', 'Topic 6', 'Topic 7', 'Topic 8'
+    ];
+
+    const topicsContainer = document.getElementById('topics-container');
+
+    // Create the video upload and delete section for each topic
+    topics.forEach((topic, index) => {
+        const topicDiv = document.createElement('div');
+        topicDiv.classList.add('topic');
+
+        const topicTitle = document.createElement('h3');
+        topicTitle.innerText = topic;
+
+        const buttonContainer = document.createElement('div');
+        buttonContainer.classList.add('button-container');
+
+        const uploadButton = document.createElement('button');
+        uploadButton.innerText = 'Upload Video(s)';
+        uploadButton.addEventListener('click', () => uploadVideo(index));
+
+        const deleteAllButton = document.createElement('button');
+        deleteAllButton.innerText = 'Delete All Videos';
+        deleteAllButton.classList.add('delete');
+        deleteAllButton.addEventListener('click', () => deleteAllVideos(index));
+
+        buttonContainer.appendChild(uploadButton);
+        buttonContainer.appendChild(deleteAllButton);
+
+        const uploadInput = document.createElement('input');
+        uploadInput.type = 'file';
+        uploadInput.accept = 'video/*';
+        uploadInput.multiple = true;
+        uploadInput.classList.add('upload-input');
+        uploadInput.id = `upload-input-${index}`;
+
+        const uploadedVideosContainer = document.createElement('div');
+        uploadedVideosContainer.classList.add('uploaded-video');
+        uploadedVideosContainer.id = `video-container-${index}`;
+
+        topicDiv.appendChild(topicTitle);
+        topicDiv.appendChild(buttonContainer);
+        topicDiv.appendChild(uploadInput);
+        topicDiv.appendChild(uploadedVideosContainer);
+
+        topicsContainer.appendChild(topicDiv);
+
+        // Load saved videos for this topic
+        loadSavedVideos(index);
+    });
+
+    // Play sound on button click
+    function playClickSound() {
+        const audio = document.getElementById('buttonClickSound');
+        audio.currentTime = 0;
+        audio.play();
+    }
+
+    // Attach click sound to all buttons
+    document.addEventListener('DOMContentLoaded', () => {
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(button => {
+            button.addEventListener('click', playClickSound);
+        });
+    });
+
+// Object to track uploaded videos per topic
+let uploadedVideosPerTopic = {};
+
+function uploadVideo(topicIndex) {
+    const input = document.getElementById(`upload-input-${topicIndex}`);
+    const videoContainer = document.getElementById(`video-container-${topicIndex}`);
+
+    // Initialize the list for this topic if it doesn't exist
+    if (!uploadedVideosPerTopic[topicIndex]) {
+        uploadedVideosPerTopic[topicIndex] = [];
+    }
+
+    // Get existing video URLs for this topic
+    const existingVideos = uploadedVideosPerTopic[topicIndex];
+
+    input.addEventListener('change', function () {
+        const files = Array.from(input.files);
+        const validFiles = files.filter(file => {
+            const fileType = file.type.split('/')[0];
+            const fileSizeMB = file.size / (1024 * 1024);
+            return fileType === 'video' && fileSizeMB <= 200; // Allow videos up to 200MB
+        });
+
+        if (validFiles.length === 0) {
+            alert('Please upload valid video files (up to 200MB).');
+            return;
+        }
+
+        const formData = new FormData();
+        validFiles.forEach(file => {
+            // Create a URL for the file to check against existing videos
+            const fileURL = URL.createObjectURL(file);
+
+            // Check if the file URL already exists for this topic
+            if (!existingVideos.includes(fileURL)) {
+                formData.append('file', file);
+            } else {
+                alert(`File "${file.name}" has already been uploaded for this topic.`);
+            }
+        });
+
+        if (formData.getAll('file').length === 0) {
+            alert('No new valid files to upload.');
+            return;
+        }
+
+        formData.append('topic_index', topicIndex);
+        formData.append('user_id', sessionStorage.getItem('UserID')); // Include UserID
+
+        fetch('/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            data.file_urls.forEach(url => {
+                if (!existingVideos.includes(url)) { // Prevent duplicates
+                    addVideoToContainer(videoContainer, url);
+                    existingVideos.push(url); // Update the list of uploaded videos for this topic
+                }
+            });
+            input.value = ''; // Reset file input
+        })
+        .catch(error => {
+            console.error('Error uploading videos:', error);
+            alert('Failed to upload videos. Please try again.');
+        });
+    });
+
+    // Trigger the file input click to open the file dialog
+    input.click();
+}
+
+    function deleteAllVideos(topicIndex) {
+        const formData = new FormData();
+        formData.append('topic_index', topicIndex);
+        formData.append('user_id', sessionStorage.getItem('UserID')); // Include UserID
+
+        fetch('/delete_all', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message === 'All files deleted') {
+                const videoContainer = document.getElementById(`video-container-${topicIndex}`);
+                videoContainer.innerHTML = '';
+            }
+        })
+        .catch(error => console.error('Error deleting videos:', error));
+    }
+
+    function addVideoToContainer(container, url) {
+        const videoItem = document.createElement('div');
+        videoItem.classList.add('video-item');
+
+        const videoElement = document.createElement('video');
+        videoElement.controls = true;
+        videoElement.src = url;
+
+        const deleteButton = document.createElement('button');
+        deleteButton.innerText = 'Delete';
+        deleteButton.addEventListener('click', () => {
+            playClickSound();
+            fetch('/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ url: url, user_id: sessionStorage.getItem('UserID') }) // Include UserID
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message === 'File deleted') {
+                    container.removeChild(videoItem);
+                }
+            })
+            .catch(error => console.error('Error deleting video:', error));
+        });
+
+        videoItem.appendChild(videoElement);
+        videoItem.appendChild(deleteButton);
+
+        container.appendChild(videoItem);
+    }
+
+    function loadSavedVideos(topicIndex) {
+        fetch(`/get_uploaded_videos?topic_index=${topicIndex}&user_id=${sessionStorage.getItem('UserID')}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.file_urls && Array.isArray(data.file_urls)) {
+                const videoContainer = document.getElementById(`video-container-${topicIndex}`);
+                data.file_urls.forEach(url => {
+                    addVideoToContainer(videoContainer, url);
+                });
+            } else {
+                console.error('Invalid response structure:', data);
+            }
+        })
+        .catch(error => console.error('Error loading videos:', error));
+    }
+
+    // Logout function with redirect to homepage
+    function logout() {
+        playClickSound(); // Play click sound before redirecting
+        setTimeout(() => {
+            window.location.href = '/'; // Redirect to homepage
+        }, 300); // Delay to ensure sound plays before redirect
+    }
+</script>
+
+</body>
+</html>

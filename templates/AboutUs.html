@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>About Us</title>
+    <link rel="stylesheet" href="{{url_for('static', filename='AboutUs.css')}}">
+</head>
+<body>
+    <h1>About Us</h1> <br>
+    <img src="{{ url_for('static', filename='images/logo.png') }}" 
+         alt="clickableImage" 
+         style="cursor: pointer;" 
+         height="200" 
+         width="200" 
+         title="Hi, I'm a tumbler!" 
+         class="shake">
+
+    <audio id="soundEffect" src="{{ url_for('static', filename='audio/BoingSoundEffect.mp3') }}"></audio>
+    <audio id="buttonClickSound" src="{{ url_for('static', filename='audio/ButtonClickSound.mp3') }}"></audio>
+
+    <script>
+        const image = document.querySelector('.shake'); // Select the image
+        const sound = document.getElementById('soundEffect');
+        const buttonClickSound = document.getElementById('buttonClickSound');
+
+        // Play sound effect when the image is clicked
+        image.addEventListener('click', () => {
+            sound.currentTime = 0; // Rewind to the start
+            sound.play(); // Play the sound
+        });
+    </script>
+    
+    <h2>Welcome to Blissful Mind Learning Centre!</h2> 
+    <h3>Blissful Mind Learning Centre was founded in 2024. We believe that every student has the potential to improve and succeed.</h3> <br>
+
+    <h2>Our Mission, Vision & Core Values</h2>
+    <img src="{{ url_for('static', filename='images/Mission.png') }}" height = "250" width = "450" alt = "Mission" title = "We aim to...">
+    <img src="{{ url_for('static', filename='images/Vision.png') }}" height = "250" width = "450" alt = "Vision" title = "We hope ...">
+    <img src="{{ url_for('static', filename='images/Core Values.png') }}" height = "250" width = "450" alt = "Core Values" title = "Values"> <br>
+
+    <h2>About This Platform</h2> 
+    <h3>This website is specially developed for Primary 1 students from Sekolah Kebangsaan (SK) who are enrolled in our learning centre. Teachers can upload video lessons or notes and create exercises for students, while students can view these resources to support their learning.</h3> <br>
+
+    <h2>Access and Registration</h2> 
+    <h3>Both teachers and students are required to register and log in to access the main content. However, the Homepage, About Us, and Topic Overview pages with limited features are available to everyone before registration.</h3> <br>
+
+    <h2>What Do We Offer?</h2>
+    <h3>The learning center offers Chinese, Malay, English, Mathematics, and Science for SJK (C) and SK students, while SMK students are provided with Malay, English, Mathematics, Science, and History.</h3> <br>
+
+    <h2>Join Us Today!</h2> 
+    <h3>Blissful Mind Learning Centre is located on the 1st floor, Lot 8751, LLD, 98000 Miri, Sarawak.</h3> 
+    <h3>The center operates from Monday to Friday, 2 PM to 9 PM.</h3> 
+    
+</body>
+</html>

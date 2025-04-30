@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <title>Homepage</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='homepage.css') }}">
+</head>
+
+    <h1>Welcome to Math Funland!!!</h1>
+    <h2>Easy Study and Practice!</h2>
+    
+    <img id="clickableImage" src="{{ url_for('static', filename='images/logo.png') }}" 
+         alt="clickableImage" 
+         style="cursor: pointer;" 
+         height="400" 
+         width="400" 
+         title="Hi, I'm a tumbler!" 
+         class="shake">
+
+    <audio id="backgroundMusic" src="{{ url_for('static', filename='audio/HomepageBGM.mp3') }}" autoplay muted></audio>
+    <audio id="soundEffect" src="{{ url_for('static', filename='audio/BoingSoundEffect.mp3') }}"></audio>
+    <audio id="buttonClickSound" src="{{ url_for('static', filename='audio/ButtonClickSound.mp3') }}"></audio>
+
+    <script>
+        const backgroundMusic = document.getElementById('backgroundMusic');
+        const clickableImage = document.getElementById('clickableImage');
+        const originalImageSrc = "{{ url_for('static', filename='images/logo.png') }}"; // Store original image source
+        const newImageSrc = "{{ url_for('static', filename='images/Music_Cue.png') }}"; // New image source when clicked
+        let isMusicPlaying = false; // Track whether the music is currently playing
+
+        // Change image back and pause music when it finishes
+        backgroundMusic.addEventListener('ended', () => {
+            clickableImage.src = originalImageSrc; // Change back to original image
+            backgroundMusic.pause(); // Pause music
+            backgroundMusic.currentTime = 0; // Reset music to start
+            isMusicPlaying = false; // Update music playing status
+        });
+
+        // Play sound effect and change image when the image is clicked
+        clickableImage.addEventListener('click', () => {
+            if (!isMusicPlaying) { // Check if music is not already playing
+                backgroundMusic.muted = false; // Unmute the music
+                backgroundMusic.currentTime = 0; // Reset music to start
+                backgroundMusic.play().catch(error => {
+                    console.error("Audio playback failed:", error);
+                });
+                isMusicPlaying = true; // Update music playing status
+            }
+            document.getElementById('soundEffect').play(); // Play the sound effect
+            clickableImage.src = newImageSrc; // Change image source
+        });
+
+        // Listen for visibility change
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                if (isMusicPlaying) { // Only play if music was already playing
+                    backgroundMusic.play().catch(error => {
+                        console.error("Audio playback failed:", error);
+                    });
+                }
+            } else {
+                backgroundMusic.pause(); // Pause if not visible
+            }
+        });
+
+        // Function to play button click sound and navigate
+        const navigateTo = (url) => {
+            document.getElementById('buttonClickSound').play(); // Play the sound
+            setTimeout(() => {
+                window.open(url, '_blank'); // Open in a new tab
+            }, 300); // Adjust the delay as needed
+        };
+
+        // Add event listener to original image to play music again when double-clicked
+        clickableImage.addEventListener('dblclick', () => {
+            if (clickableImage.src === originalImageSrc) {
+                backgroundMusic.currentTime = 0; // Reset music to start
+                backgroundMusic.play(); // Play the music again
+                isMusicPlaying = true; // Update music playing status
+            }
+        });
+    </script>
+    
+    <h2>Blissful Mind Learning Centre</h2>
+    <br>
+    <nav>
+        <button onclick="navigateTo('/AboutUs')" title="Come and Get to Know Us!" style="cursor: pointer;">About Us</button>
+        <button onclick="navigateTo('/Register')" title="Register!" style="cursor: pointer;">Register</button>
+        <button onclick="navigateTo('/Login')" title="Login!" style="cursor: pointer;">Login</button>
+        <button onclick="navigateTo('/TopicsOverview')" title="See The Topics!" style="cursor: pointer;">Topics</button>
+    </nav>
+</body>
+</html>

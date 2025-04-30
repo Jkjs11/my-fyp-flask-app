@@ -1,0 +1,28 @@
+body { 
+    text-align: center;
+    background: linear-gradient(to bottom, lightpink, lightyellow);
+    background-repeat: no-repeat; /* Prevents the image from repeating */
+    background-position: center; /* Centers the image */
+    font-family:Georgia, 'Times New Roman', Times, serif;
+    font-size: larger;
+}
+
+ol{
+    text-align: center;
+}
+.shake {
+    display: inline-block;
+    animation: shake 1s infinite;
+}
+
+@keyframes shake {
+    0% { transform: translate(0, 2px); }   /* Move down */
+    25% { transform: translate(0, -2px); }  /* Move up */
+    50% { transform: translate(0, 2px); }   /* Move down */
+    75% { transform: translate(0, -2px); }  /* Move up */
+    100% { transform: translate(0, 2px); }   /* Move down */
+}
+
+h3{
+    font-weight: lighter;
+}

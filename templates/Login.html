@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{url_for('static', filename='Login.css')}}">
+    <title>Login</title>
+
+    <!-- Include Font Awesome for the eye icon -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <audio id="buttonClickSound" src="{{ url_for('static', filename='audio/ButtonClickSound.mp3') }}"></audio>
+
+    <script>
+    // Toggle password field visibility based on selected role
+    function togglePasswordField() {
+        const role = document.querySelector('input[name="role"]:checked');
+        const passwordField = document.getElementById('password');
+        const passwordLabel = document.getElementById('passwordLabel');
+        const passwordContainer = document.getElementById('passwordContainer');
+        const eyeIcon = document.getElementById('eyeIcon');
+
+        if (role && role.value === 'Teacher') {
+            passwordField.required = true;
+            passwordField.style.display = 'inline';
+            passwordLabel.style.display = 'inline';
+            passwordContainer.classList.add('show-eye'); // Show eye icon when Teacher is selected
+            eyeIcon.style.display = 'inline'; // Show the eye icon when password field is visible
+        } else {
+            passwordField.required = false;
+            passwordField.value = '';
+            passwordField.style.display = 'none';
+            passwordLabel.style.display = 'none';
+            passwordContainer.classList.remove('show-eye'); // Hide eye icon
+            eyeIcon.style.display = 'none'; // Hide the eye icon when password field is not visible
+        }
+    }
+
+    // Toggle password visibility using the eye icon
+    function togglePasswordVisibility() {
+        const passwordField = document.getElementById('password');
+        const eyeIcon = document.getElementById('eyeIcon');
+
+        if (passwordField.type === "password") {
+            passwordField.type = "text";  // Show password
+            eyeIcon.classList.remove("fa-eye"); // Remove closed eye icon
+            eyeIcon.classList.add("fa-eye-slash"); // Add open eye icon
+        } else {
+            passwordField.type = "password"; // Hide password
+            eyeIcon.classList.remove("fa-eye-slash"); // Remove open eye icon
+            eyeIcon.classList.add("fa-eye"); // Add closed eye icon
+        }
+    }
+
+    // Validate login form and submit
+    function checkLogin(event) {
+        event.preventDefault();
+        const nameField = document.getElementById('name').value.trim();
+        const role = document.querySelector('input[name="role"]:checked');
+        const passwordField = document.getElementById('password');
+
+        console.log("Name:", nameField);
+        console.log("Role:", role ? role.value : "No role selected");
+
+        // Play the button click sound before form submission
+        playSound();
+
+        // Submit the form after the sound is played
+        setTimeout(() => {
+            document.querySelector('form').submit();
+        }, 300); // Small delay to ensure sound is heard before submit
+    }
+
+    const playSound = () => {
+        document.getElementById('buttonClickSound').play(); // Play the sound
+    };
+
+    const playSoundAndReset = () => {
+        playSound(); // Play the sound
+        setTimeout(() => {
+            document.forms[0].reset(); // Reset the form
+        }, 300); // Adjust the delay as needed
+    };
+    </script>
+
+</head>
+
+<body>
+    <h2>Login</h2>
+
+    <form action="/login_now" method="post" onsubmit="checkLogin(event)">
+        <label for="name">Enter Your Name: </label>
+        <input type="text" placeholder="Enter Your Name" id="name" name="name" required> <br><br>
+        
+        <label for="role">Role: </label> <br>
+        <input type="radio" id="teacher" name="role" value="Teacher" required onclick="togglePasswordField()">
+        <label for="teacher">Teacher</label> <br>
+        <input type="radio" id="student" name="role" value="Student" required onclick="togglePasswordField()">
+        <label for="student">Student</label> <br><br>
+        
+        <!-- Password Section in the Form -->
+        <div id="passwordContainer" class="password-container">
+            <label for="password" id="passwordLabel" style="display: none;">Enter The Password: </label> 
+            <input type="password" placeholder="Enter The Password" id="password" name="password" style="display: none;"> 
+ 
+            <!-- Eye icon inside the password field, initially hidden -->
+            <span id="eyeIcon" class="fa fa-eye eye-icon" onclick="togglePasswordVisibility()" style="display: none;"></span>
+        </div>
+
+        <!-- Modified Login button with sound -->
+        <button type="submit" onclick="playSound()" style="cursor: pointer;">Login</button> <br><br>
+
+        <!-- Reset button with sound -->
+        <button type="button" onclick="playSoundAndReset()" style="cursor: pointer;">Reset</button>
+    </form>
+
+</body>
+</html>

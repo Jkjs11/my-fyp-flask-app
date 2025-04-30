@@ -1,0 +1,46 @@
+html, body {
+    height: 100%; /* Ensure the html and body take up full height */
+    margin: 0; /* Remove default margin */
+}
+
+body { 
+    text-align: center;
+    background: url('/static/images/registerpage_bg.png') no-repeat center center;
+    background-repeat: no-repeat;
+    background-position: center; 
+    background-size: cover; /* Ensure the background covers the full page */
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 30px;
+}
+
+form {
+    font-size: 25px; /* Note: 'auto' is not a valid font-size value. Consider using px, em, or rem instead */
+}
+
+input[type="text"], textarea{
+    width: 300px; /* Adjust width as needed */
+    height: 40px; /* Adjust height for input fields */
+    font-size: 20px; /* Match font size */
+    padding: 5px; /* Add some padding for better spacing */
+    border: 1px solid #000000; /* Add a border */
+    border-radius: 4px; /* Add rounded corners */
+}
+
+input[type="number"] {
+    width: 70px; /* Adjust width as needed */
+    height: 40px; /* Adjust height for a larger appearance */
+    font-size: 20px; /* Match font size */
+    padding: 5px; /* Add padding for better spacing */
+    border: 1px solid #000000; /* Add a border */
+    border-radius: 4px; /* Rounded corners */
+}
+
+button{
+    color:white;
+    background-color: darkblue;
+    width: 100px;      /* Set width */
+    height: 40px;     /* Set height */
+    font-size: 20px;  /* Set font size */
+    font-family: 'Times New Roman', Times, serif;
+    border-radius: 50px;
+}

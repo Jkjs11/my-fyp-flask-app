@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Learning Portal</title>
+    
+    <!-- Audio for button click sound -->
+    <audio id="buttonClickSound" src="{{ url_for('static', filename='audio/ButtonClickSound.mp3') }}" preload="auto"></audio>
+    
+    <!-- Background music -->
+    <audio id="backgroundMusic" loop>
+        <source src="{{ url_for('static', filename='audio/StudentPageBGM.mp3') }}" type="audio/mp3">
+    </audio>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='student_page.css') }}">
+</head>
+
+<body>
+    <header>
+        <h1>Fun Learning World !!!</h1>
+        <button id="logoutButton" onclick="logoutAndPlaySound()" title="Logout">
+            <i class="fas fa-sign-out-alt"></i>
+        </button>
+    </header>
+
+    <div class="container">
+        <!-- Topics Navigation -->
+        <div class="topics-nav">
+            <h2>Topics</h2>
+            <div id="topics-list" class="topics-list"></div>
+
+            <!-- Inside the topics-nav div (below the topics list) -->
+            <div class="tip-message">
+                <i class="fas fa-info-circle"></i>The "Start Exercises" button is below the video😊 Enjoy!
+            </div>
+
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Video Section -->
+            <div id="video-section" class="section">
+                <h2 id="current-topic-title">Select a Topic</h2>
+                <div id="teacher-info" class="teacher-info"></div>
+                <div id="video-status" class="status-message"></div>
+                <div id="video-container" class="video-container"></div>
+            </div>
+
+            <!-- Exercise Section -->
+            <div id="exercise-section" class="section hidden">
+                <button onclick="backToVideos(); playClickSound()" class="back-btn">
+                    <i class="fas fa-arrow-left"></i> Back to Videos
+                </button>
+                <h2 id="exercise-topic-title"></h2>
+                <div id="exercise-teacher-info" class="teacher-info"></div>
+                <div id="exercise-status" class="status-message"></div>
+                <div id="exercise-progress">
+                    <span id="completed-count">0</span> out of <span id="total-count">0</span> exercises completed
+                </div>
+                <div id="current-exercise" class="exercise-container">
+                    <!-- Exercise will be loaded here -->
+                </div>
+                <div id="feedback-message" class="feedback-message"></div>
+                <button id="next-exercise-btn" class="hidden" onclick="loadNextExercise(); playClickSound()">
+                    Next Exercise <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Music Control Button -->
+    <div class="music-control">
+        <button id="musicToggle" title="Toggle Background Music">
+            <i class="fas fa-music"></i>
+        </button>
+    </div>
+
+    <script>
+        // Feedback messages
+        const positiveFeedback = [
+            "Correct!", "Great!", "Good Job!", "Awesome!", 
+            "Bravo!", "Keep it up!", "Fantastic!", "Smart!", "Excellent!"
+        ];
+        const negativeFeedback = [
+            "Let's try again!"
+        ];
+
+        let currentTopicIndex = 0;
+        let exercises = [];
+        let currentExerciseIndex = 0;
+        let completedExercises = [];
+        let teacherName = "Teacher";
+        let musicEnabled = false;
+        const backgroundMusic = document.getElementById("backgroundMusic");
+
+        // Initialize the page
+        document.addEventListener("DOMContentLoaded", () => {
+            loadTopics();
+            setupMusicControls();
+        });
+
+        // Set up music controls
+        function setupMusicControls() {
+            const musicToggle = document.getElementById("musicToggle");
+            
+            // Load music preference from localStorage if available
+            if (localStorage.getItem('musicEnabled') === 'true') {
+                musicEnabled = true;
+                backgroundMusic.play().catch(e => console.log("Autoplay prevented:", e));
+                musicToggle.innerHTML = '<i class="fas fa-volume-up"></i>';
+            }
+            
+            musicToggle.addEventListener("click", () => {
+                playClickSound();
+                musicEnabled = !musicEnabled;
+                
+                if (musicEnabled) {
+                    backgroundMusic.play().catch(e => console.log("Play prevented:", e));
+                    musicToggle.innerHTML = '<i class="fas fa-volume-up"></i>';
+                    localStorage.setItem('musicEnabled', 'true');
+                } else {
+                    backgroundMusic.pause();
+                    musicToggle.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                    localStorage.setItem('musicEnabled', 'false');
+                }
+            });
+        }
+
+        // Load all available topics with proper names
+        function loadTopics() {
+            const topicsList = document.getElementById("topics-list");
+            topicsList.innerHTML = "";
+            
+            const topicNames = [
+                "Numbers Up To 100",
+                "Addition and Subtraction",
+                "Fractions",
+                "Money",
+                "Time",
+                "Length, Mass and Volume of Liquid",
+                "Shapes",
+                "Data"
+            ];
+            
+            for (let i = 0; i < topicNames.length; i++) {
+                const topicBtn = document.createElement("button");
+                topicBtn.textContent = `Topic ${i + 1}: ${topicNames[i]}`;
+                topicBtn.onclick = () => {
+                    playClickSound();
+                    currentTopicIndex = i;
+                    loadTopicContent(i);
+                };
+                topicsList.appendChild(topicBtn);
+            }
+        }
+
+        // Load videos for selected topic
+        function loadTopicContent(topicIndex) {
+            document.getElementById("current-topic-title").textContent = `Topic ${topicIndex + 1} Videos`;
+            const statusElement = document.getElementById("video-status");
+            statusElement.textContent = "Loading videos...";
+            statusElement.className = "status-message loading";
+            
+            // Clear previous videos
+            document.getElementById("video-container").innerHTML = "";
+            
+            fetch(`/get_topic_videos?topic_index=${topicIndex}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const videoContainer = document.getElementById("video-container");
+                    
+                    if (data.file_urls && data.file_urls.length > 0) {
+                        statusElement.textContent = "";
+                        statusElement.className = "status-message";
+                        
+                        // Display teacher info
+                        const teacherInfoElement = document.getElementById("teacher-info");
+                        teacherInfoElement.innerHTML = 
+                            `<p>Video uploaded by: <strong>${data.teacher_name || "Teacher"}</strong></p>`;
+                        
+                        data.file_urls.forEach((url, index) => {
+                            const videoWrapper = document.createElement("div");
+                            videoWrapper.className = "video-wrapper";
+                            
+                            const videoElement = document.createElement("video");
+                            videoElement.controls = true;
+                            videoElement.src = url;
+                            videoElement.className = "topic-video";
+                            
+                            const videoTitle = document.createElement("p");
+                            videoTitle.textContent = extractTopicName(url) || `Video ${index + 1}`;
+                            videoTitle.className = "video-title";
+                            
+                            videoWrapper.appendChild(videoTitle);
+                            videoWrapper.appendChild(videoElement);
+                            videoContainer.appendChild(videoWrapper);
+                        });
+                        
+                        // Add button to start exercises
+                        const startExercisesBtn = document.createElement("button");
+                        startExercisesBtn.textContent = "Start Exercises";
+                        startExercisesBtn.className = "start-exercises";
+                        startExercisesBtn.onclick = () => {
+                            playClickSound();
+                            loadExercises(topicIndex);
+                        };
+                        videoContainer.appendChild(startExercisesBtn);
+                    } else {
+                        statusElement.textContent = "No videos available for this topic yet.";
+                        statusElement.className = "status-message info";
+                        document.getElementById("teacher-info").innerHTML = "";
+                    }
+                })
+                .catch(error => {
+                    console.error("Error loading videos:", error);
+                    statusElement.textContent = `Error loading videos: ${error.message}`;
+                    statusElement.className = "status-message error";
+                    document.getElementById("teacher-info").innerHTML = "";
+                });
+        }
+
+        // Helper function to extract topic name from file path
+        function extractTopicName(filePath) {
+            // Map of known topic names with their correct formatting
+            const topicNameMap = {
+                'Numbers_Up_To_100': 'Numbers Up To 100',
+                'Addition_and_Subtraction': 'Addition and Subtraction',
+                'Fractions': 'Fractions',
+                'Money': 'Money',
+                'Time': 'Time',
+                'Length_Mass_and_Volume_of_Liquid': 'Length, Mass and Volume of Liquid',
+                'Shapes': 'Shapes',
+                'Data': 'Data'
+            };
+
+            const filename = filePath.split('/').pop().split('\\').pop();
+            const withoutExt = filename.replace(/\.[^/.]+$/, "");
+    
+            const match = withoutExt.match(/Topic_\d+_(.+)/);
+    
+            if (match && match[1]) {
+                return topicNameMap[match[1]] || match[1].replace(/_/g, ' ');
+            }
+            return null;
+        }
+
+        // Load exercises for the current topic 
+        function loadExercises(topicIndex) {
+            document.getElementById("video-section").classList.add("hidden");
+            document.getElementById("exercise-section").classList.remove("hidden");
+            document.getElementById("exercise-topic-title").textContent = `Topic ${topicIndex + 1} Exercises`;
+            
+            const statusElement = document.getElementById("exercise-status");
+            statusElement.textContent = "Loading exercises...";
+            statusElement.className = "status-message loading";
+            
+            // Adjust the topic index if backend uses 1-based indexing
+            const backendTopicIndex = topicIndex + 1; // Remove this line if backend uses 0-based
+            
+            fetch(`/get_topic_exercises?topic_index=${backendTopicIndex}`) // or use topicIndex if backend is 0-based
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.exercises && data.exercises.length > 0) {
+                        statusElement.textContent = "";
+                        statusElement.className = "status-message";
+                        
+                        if (data.exercises[0].teacher_name) {
+                            teacherName = data.exercises[0].teacher_name;
+                        }
+                        document.getElementById("exercise-teacher-info").innerHTML = 
+                            `<p>Exercise created by: <strong>${teacherName}</strong></p>`;
+                        
+                        exercises = data.exercises;
+                        currentExerciseIndex = 0;
+                        completedExercises = [];
+                        updateProgress();
+                        displayExercise(exercises[0]);
+                        
+                        // Start background music when exercises begin if enabled
+                        if (musicEnabled) {
+                            backgroundMusic.play().catch(e => console.log("Play prevented:", e));
+                        }
+                    } else {
+                        statusElement.textContent = "No exercises available for this topic yet.";
+                        statusElement.className = "status-message info";
+                        document.getElementById("exercise-teacher-info").innerHTML = "";
+                    }
+                })
+                .catch(error => {
+                    console.error("Error loading exercises:", error);
+                    statusElement.textContent = `Error loading exercises: ${error.message}`;
+                    statusElement.className = "status-message error";
+                    document.getElementById("exercise-teacher-info").innerHTML = "";
+                });
+        }
+
+        // Display the current exercise
+        function displayExercise(exercise) {
+            const exerciseContainer = document.getElementById("current-exercise");
+            exerciseContainer.innerHTML = "";
+            
+            // Create question element
+            const questionElement = document.createElement("div");
+            questionElement.className = "exercise-question";
+            
+            if (exercise.question_image) {
+                const imgElement = document.createElement("img");
+                imgElement.src = exercise.question_image;
+                imgElement.alt = "Exercise image";
+                questionElement.appendChild(imgElement);
+            }
+            
+            if (exercise.question) {
+                const textElement = document.createElement("p");
+                textElement.textContent = exercise.question;
+                questionElement.appendChild(textElement);
+            }
+            
+            exerciseContainer.appendChild(questionElement);
+            
+            // Create options
+            const optionsContainer = document.createElement("div");
+            optionsContainer.className = "exercise-options";
+            
+            exercise.options.forEach((option, index) => {
+                const optionBtn = document.createElement("button");
+                optionBtn.textContent = `${String.fromCharCode(65 + index)}. ${option}`;
+                optionBtn.onclick = () => checkAnswer(index, exercise.correct_option);
+                optionsContainer.appendChild(optionBtn);
+            });
+            
+            exerciseContainer.appendChild(optionsContainer);
+            
+            // Hide next button until answer is correct
+            document.getElementById("next-exercise-btn").classList.add("hidden");
+            document.getElementById("feedback-message").textContent = "";
+        }
+
+        // Check if the selected answer is correct
+        function checkAnswer(selectedIndex, correctIndex) {
+            playClickSound();
+            const feedbackElement = document.getElementById("feedback-message");
+            
+            if (selectedIndex === correctIndex) {
+                // Correct answer
+                const randomFeedback = positiveFeedback[Math.floor(Math.random() * positiveFeedback.length)];
+                feedbackElement.textContent = randomFeedback;
+                feedbackElement.className = "feedback-message correct";
+                
+                // Mark exercise as completed if not already
+                if (!completedExercises.includes(currentExerciseIndex)) {
+                    completedExercises.push(currentExerciseIndex);
+                    updateProgress();
+                }
+                
+                // Show next button
+                document.getElementById("next-exercise-btn").classList.remove("hidden");
+            } else {
+                // Wrong answer
+                const randomFeedback = negativeFeedback[Math.floor(Math.random() * negativeFeedback.length)];
+                feedbackElement.textContent = randomFeedback;
+                feedbackElement.className = "feedback-message incorrect";
+            }
+        }
+
+        // Load the next exercise
+        function loadNextExercise() {
+            // Only allow proceeding to next exercise if current one is completed
+            if (completedExercises.includes(currentExerciseIndex)) {
+                currentExerciseIndex++;
+                
+                if (currentExerciseIndex < exercises.length) {
+                    displayExercise(exercises[currentExerciseIndex]);
+                } else {
+                    // All exercises completed
+                    document.getElementById("current-exercise").innerHTML = 
+                        `<p class='completion-message'>You've completed all exercises for this topic!</p>
+                         <p class='completion-message'>Created by: <strong>${teacherName}</strong></p>`;
+                    document.getElementById("next-exercise-btn").classList.add("hidden");
+                }
+            }
+        }
+
+        // Update progress counter
+        function updateProgress() {
+            document.getElementById("completed-count").textContent = completedExercises.length;
+            document.getElementById("total-count").textContent = exercises.length;
+        }
+
+        // Go back to videos
+        function backToVideos() {
+            document.getElementById("exercise-section").classList.add("hidden");
+            document.getElementById("video-section").classList.remove("hidden");
+        }
+
+        // Play click sound
+        function playClickSound() {
+            const sound = document.getElementById("buttonClickSound");
+            sound.currentTime = 0;
+            sound.play();
+        }
+
+        // Logout function
+        function logoutAndPlaySound() {
+            playClickSound();
+            // Reset progress (no need to save to server as per requirement 6)
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 300);
+        }
+    </script>
+</body>
+</html>

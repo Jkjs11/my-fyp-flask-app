@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='Register.css') }}">
+    <title>Registration</title>
+</head>
+<body>
+    <h1>Registration</h1>
+
+    <!-- Audio for Button Click Sound -->
+    <audio id="buttonClickSound" src="{{ url_for('static', filename='audio/ButtonClickSound.mp3') }}"></audio>
+
+    <script>
+        // Function to play button click sound and submit the form
+        const playSoundAndSubmit = () => {
+            document.getElementById('buttonClickSound').play(); // Play the sound
+            setTimeout(() => {
+                document.getElementById('registerForm').submit(); // Submit the form explicitly
+            }, 200); // Adjust the delay as needed
+        };
+
+        // Function to play button click sound and reset the form
+        const playSoundAndReset = () => {
+            document.getElementById('buttonClickSound').play(); // Play the sound
+            setTimeout(() => {
+                document.getElementById('registerForm').reset(); // Reset the form explicitly
+            }, 200); // Adjust the delay as needed
+        };
+    </script>
+
+    <form action="/register_now" method="POST" id="registerForm">
+        <label for="name">Enter Your Name: </label>
+        <input type="text" placeholder="Enter Your Name" id="name" name="name" required> <br><br>
+       
+        <label for="age">Age: </label> 
+        <input type="number" id="age" name="age" min="1" max="99" required> <br><br>
+
+        <label for="gender">Gender: </label> <br>
+        <input type="radio" id="male" name="gender" value="Male" required> 
+        <label for="male">Male</label> <br>
+        <input type="radio" id="female" name="gender" value="Female" required> 
+        <label for="female">Female</label> <br><br>
+        
+        <label for="role">Role: </label> <br>
+        <input type="radio" id="teacher" name="role" value="Teacher" required> 
+        <label for="teacher">Teacher</label> <br>
+        <input type="radio" id="student" name="role" value="Student" required> 
+        <label for="student">Student</label> <br> <br>
+
+        <!-- Reminder Message -->
+        <p style="color: red; font-weight: bold; font-size: small;">
+            Please remember the information you registered for login. <br> If you forget, you can register again, but remember the new details.<br><br>
+        </p>     
+
+        <button type="button" onclick="playSoundAndSubmit()" style="cursor: pointer;">Register</button> <br> <br>
+        <button type="button" onclick="playSoundAndReset()" style="cursor: pointer;">Reset</button>
+    </form>
+
+</body>
+</html>
