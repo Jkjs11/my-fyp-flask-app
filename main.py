@@ -4,11 +4,14 @@ import os
 from datetime import datetime
 import logging
 import pymysql.cursors
+from dotenv import load_dotenv
 
-import base64
+# Load environment variables
+load_dotenv()
 
 # Initialize Flask app
 app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY')  # Only use .env
 
 # Secret key for session
 app.secret_key = os.environ.get('SECRET_KEY')  # Consider using a stronger, environment-based secret key
