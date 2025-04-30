@@ -399,7 +399,7 @@ def get_topic_videos():
         query = """
         SELECT v.FilePath, u.Name 
         FROM videos v
-        JOIN Users u ON v.UserID = u.UserID
+        JOIN users u ON v.UserID = u.UserID
         WHERE u.Role = 'Teacher' AND v.TopicIndex = %s
         ORDER BY v.UploadDate DESC
         """
@@ -437,7 +437,7 @@ def get_topic_exercises():
         cursor = connection.cursor()
         
         # Get teacher's user ID
-        cursor.execute("SELECT UserID, Name FROM Users WHERE Role = 'Teacher' LIMIT 1")
+        cursor.execute("SELECT UserID, Name FROM users WHERE Role = 'Teacher' LIMIT 1")
         teacher = cursor.fetchone()
         
         if not teacher:
