@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 import logging
 import pymysql.cursors
+
 import base64
 
 # Initialize Flask app
@@ -36,14 +37,7 @@ os.makedirs(EXERCISE_IMAGE_FOLDER, exist_ok=True)
 # Database connection helper
 def get_db_connection():
     try:
-        connection = pymysql.connect(
-            host=db_config['host'],
-            user=db_config['user'],
-            password=db_config['password'],
-            database=db_config['database'],
-            port=db_config['port'],
-            ssl={'ca': '/path/to/aiven-ca.pem'}  # ← This is important!
-        )
+        connection = pymysql.connect(**db_config)
         return connection
     except pymysql.MySQLError as e:
         logging.error(f"Database connection error: {e}")
