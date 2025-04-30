@@ -63,7 +63,7 @@ def register_now():
 
         connection = get_db_connection()
         cursor = connection.cursor()
-        query = "INSERT INTO Users (Name, Age, Gender, Role) VALUES (%s, %s, %s, %s)"
+        query = "INSERT INTO users (Name, Age, Gender, Role) VALUES (%s, %s, %s, %s)"
         cursor.execute(query, (name, int(age), gender, role))
         connection.commit()
 
@@ -86,7 +86,7 @@ def login_now():
 
         connection = get_db_connection()
         cursor = connection.cursor()
-        query = "SELECT * FROM Users WHERE Name = %s AND Role = %s"
+        query = "SELECT * FROM users WHERE Name = %s AND Role = %s"
         cursor.execute(query, (name, role))
         user = cursor.fetchone()
 
