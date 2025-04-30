@@ -18,7 +18,8 @@ db_config = {
     'user': os.environ.get('DB_USER', 'avnadmin'),
     'password': os.environ.get('DB_PASSWORD', 'AVNS_14oRr0YWlxnqJO_IQSy'),
     'database': os.environ.get('DB_NAME', 'fyp'),
-    'port': int(os.environ.get('DB_PORT', 17738)) 
+    'port': int(os.environ.get('DB_PORT', 17738)),
+    'ssl_ca': os.path.join(os.path.dirname(__file__), 'ca.pem')  # Path to your CA certificate
 }
 
 # Configure upload folders
@@ -42,7 +43,11 @@ def get_db_connection():
             password=db_config['password'],
             database=db_config['database'],
             port=db_config['port'],
-            ssl={'ca': '/path/to/aiven-ca.pem'}  # ← This is important!
+            ssl={
+                'ca': db_config['ssl_ca'],
+                'ssl_verify_cert': True
+            },
+            cursorclass=pymysql.cursors.DictCursor  # For easier result handling
         )
         return connection
     except pymysql.MySQLError as e:
@@ -67,20 +72,50 @@ def register_now():
         if not all([name, age, gender, role]):
             return jsonify({"error": "All fields are required."}), 400
 
-        connection = get_db_connection()
-        cursor = connection.cursor()
-        query = "INSERT INTO Users (Name, Age, Gender, Role) VALUES (%s, %s, %s, %s)"
-        cursor.execute(query, (name, int(age), gender, role))
-        connection.commit()
+        connection = None
+        cursor = None
+        try:
+            connection = get_db_connection()
+            cursor = connection.cursor()
+            
+            # Check if user already exists
+            cursor.execute("SELECT * FROM Users WHERE Name = %s AND Role = %s", (name, role))
+            if cursor.fetchone():
+                return jsonify({"error": "User already exists"}), 400
 
-        return render_template('ThankYou.html')
+            # Insert new user
+            query = """
+            INSERT INTO Users (Name, Age, Gender, Role) 
+            VALUES (%s, %s, %s, %s)
+            """
+            cursor.execute(query, (name, int(age), gender, role))
+            connection.commit()
 
+            # Get the newly created user ID
+            cursor.execute("SELECT LAST_INSERT_ID()")
+            user_id = cursor.fetchone()['LAST_INSERT_ID()']
+            
+            # Set session variables
+            session['UserID'] = user_id
+            session['Name'] = name
+            session['Role'] = role
+            
+            return render_template('ThankYou.html')
+
+        except pymysql.Error as e:
+            if connection:
+                connection.rollback()
+            logging.error(f"Database error during registration: {e}")
+            return jsonify({"error": "Database error occurred"}), 500
+        finally:
+            if cursor:
+                cursor.close()
+            if connection:
+                connection.close()
+                
     except Exception as e:
         logging.error(f"Error during registration: {e}")
         return jsonify({"error": "An error occurred during registration."}), 500
-    finally:
-        if 'cursor' in locals(): cursor.close()
-        if 'connection' in locals(): connection.close()
 
 # User login
 @app.route('/login_now', methods=['POST'])
@@ -90,29 +125,50 @@ def login_now():
         role = request.form.get('role')
         password = request.form.get('password')
 
-        connection = get_db_connection()
-        cursor = connection.cursor()
-        query = "SELECT * FROM Users WHERE Name = %s AND Role = %s"
-        cursor.execute(query, (name, role))
-        user = cursor.fetchone()
+        if not all([name, role]):
+            return jsonify({"error": "Name and role are required"}), 400
 
-        if not user:
-            return jsonify({"error": "Invalid credentials. Please register."}), 403
+        connection = None
+        cursor = None
+        try:
+            connection = get_db_connection()
+            cursor = connection.cursor()
+            
+            query = "SELECT * FROM Users WHERE Name = %s AND Role = %s"
+            cursor.execute(query, (name, role))
+            user = cursor.fetchone()
 
-        if role == 'Teacher' and password != "20Tumbler24$":
-            return jsonify({"error": "Incorrect password. Please try again."}), 403
+            if not user:
+                return jsonify({"error": "User not found. Please register first."}), 404
 
-        session['UserID'] = user[0]
-        session['Name'] = user[1]  # Store name in session
-        session['Role'] = role  # Store role in session for later use
-        return render_template('teacher_page.html' if role == 'Teacher' else 'student_page.html')
+            # For teachers, check password
+            if role == 'Teacher':
+                if password != "20Tumbler24$":
+                    return jsonify({"error": "Incorrect password"}), 403
 
+            # Set session variables
+            session['UserID'] = user['UserID']
+            session['Name'] = user['Name']
+            session['Role'] = role
+            
+            # Redirect based on role
+            if role == 'Teacher':
+                return redirect(url_for('teacher_page'))
+            else:
+                return redirect(url_for('student_page'))
+
+        except pymysql.Error as e:
+            logging.error(f"Database error during login: {e}")
+            return jsonify({"error": "Database error occurred"}), 500
+        finally:
+            if cursor:
+                cursor.close()
+            if connection:
+                connection.close()
+                
     except Exception as e:
         logging.error(f"Error during login: {e}")
         return jsonify({"error": "An error occurred during login."}), 500
-    finally:
-        if 'cursor' in locals(): cursor.close()
-        if 'connection' in locals(): connection.close()
 
 @app.route('/upload', methods=['POST'])
 def upload():
