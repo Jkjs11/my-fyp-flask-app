@@ -25,19 +25,17 @@ python-bidi==0.4.2
 shapely==2.0.2
 pyclipper==1.3.0.post5
 
-# PyTorch Family (CPU-Only) - Using official PyPI wheels
---find-links https://download.pytorch.org/whl/torch_stable.html
-torch==2.1.2+cpu
-torchvision==0.16.2+cpu
-torchaudio==2.1.2+cpu
+# PyTorch Family (CPU-Only)
+torch==2.1.2
+torchvision==0.16.2
+torchaudio==2.1.2
 thop==0.1.1.post2209072238
 ultralytics==8.0.232
 
-# Audio/Speech - Using PyAudio wheel if available
+# Audio/Speech
 sounddevice==0.4.6
 SpeechRecognition==3.10.1
-PyAudio==0.2.14; sys_platform != 'linux' or platform_machine != 'x86_64'
-https://github.com/spatialaudio/python-sounddevice/releases/download/0.4.6/PyAudio-0.2.14-cp39-cp39-linux_x86_64.whl; sys_platform == 'linux' and platform_machine == 'x86_64' and python_version == '3.9'
+PyAudio==0.2.14
 pyttsx3==2.98
 openai-whisper==20231117
 
