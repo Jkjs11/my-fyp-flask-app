@@ -130,7 +130,7 @@ def upload():
 
                 # Check if the file already exists for this user and topic
                 cursor.execute(
-                    "SELECT FilePath FROM Videos WHERE UserID = %s AND TopicIndex = %s AND FilePath LIKE %s",
+                    "SELECT FilePath FROM videos WHERE UserID = %s AND TopicIndex = %s AND FilePath LIKE %s",
                     (user_id, topic_index, f"%{filename}")
                 )
                 existing_file = cursor.fetchone()
@@ -144,7 +144,7 @@ def upload():
                 file.save(file_path)
 
                 # Save metadata to the database
-                query = "INSERT INTO Videos (UserID, TopicIndex, FilePath, UploadDate) VALUES (%s, %s, %s, %s)"
+                query = "INSERT INTO videos (UserID, TopicIndex, FilePath, UploadDate) VALUES (%s, %s, %s, %s)"
                 cursor.execute(query, (user_id, topic_index, file_path, datetime.now()))
                 connection.commit()
                 file_urls.append(file_path)
@@ -166,7 +166,7 @@ def delete_all():
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
-        query = "SELECT FilePath FROM Videos WHERE UserID = %s AND TopicIndex = %s"
+        query = "SELECT FilePath FROM videos WHERE UserID = %s AND TopicIndex = %s"
         cursor.execute(query, (user_id, topic_index))
         videos = cursor.fetchall()
 
@@ -179,7 +179,7 @@ def delete_all():
                     logging.error(f"Error deleting file {file_path}: {e}")
                     continue
 
-        query = "DELETE FROM Videos WHERE UserID = %s AND TopicIndex = %s"
+        query = "DELETE FROM videos WHERE UserID = %s AND TopicIndex = %s"
         cursor.execute(query, (user_id, topic_index))
         connection.commit()
         return jsonify({"message": "All files deleted"})
@@ -212,7 +212,7 @@ def delete():
 
         connection = get_db_connection()
         cursor = connection.cursor()
-        query = "DELETE FROM Videos WHERE FilePath = %s AND UserID = %s"
+        query = "DELETE FROM videos WHERE FilePath = %s AND UserID = %s"
         cursor.execute(query, (url, user_id))
         connection.commit()
         return jsonify({"message": "File deleted"})
@@ -234,7 +234,7 @@ def get_uploaded_videos():
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
-        query = "SELECT FilePath FROM Videos WHERE UserID = %s AND TopicIndex = %s"
+        query = "SELECT FilePath FROM videos WHERE UserID = %s AND TopicIndex = %s"
         cursor.execute(query, (user_id, topic_index))
         videos = cursor.fetchall()
         file_urls = [video[0] for video in videos]
@@ -288,7 +288,7 @@ def save_exercise():
         connection = get_db_connection()
         with connection.cursor() as cursor:
             cursor.execute(
-                """INSERT INTO Exercises 
+                """INSERT INTO exercises 
                 (UserID, TopicIndex, Question, QuestionImage, Option1, Option2, Option3, Option4, CorrectOption)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                 (
@@ -324,7 +324,7 @@ def get_exercises():
         connection = get_db_connection()
         with connection.cursor() as cursor:
             cursor.execute(
-                "SELECT * FROM Exercises WHERE UserID = %s AND TopicIndex = %s",
+                "SELECT * FROM exercises WHERE UserID = %s AND TopicIndex = %s",
                 (user_id, topic_index)
             )
             exercises = cursor.fetchall()
@@ -361,7 +361,7 @@ def delete_exercise():
         with connection.cursor() as cursor:
             # Get exercise info to delete associated image
             cursor.execute(
-                "SELECT QuestionImage FROM Exercises WHERE ExerciseID = %s AND UserID = %s",
+                "SELECT QuestionImage FROM exercises WHERE ExerciseID = %s AND UserID = %s",
                 (data['exercise_id'], user_id)
             )
             exercise = cursor.fetchone()
@@ -374,7 +374,7 @@ def delete_exercise():
 
             # Now delete the exercise record
             cursor.execute(
-                "DELETE FROM Exercises WHERE ExerciseID = %s AND UserID = %s",
+                "DELETE FROM exercises WHERE ExerciseID = %s AND UserID = %s",
                 (data['exercise_id'], user_id)
             )
             connection.commit()
@@ -398,7 +398,7 @@ def get_topic_videos():
         # Get all videos for this topic along with teacher's name
         query = """
         SELECT v.FilePath, u.Name 
-        FROM Videos v
+        FROM videos v
         JOIN Users u ON v.UserID = u.UserID
         WHERE u.Role = 'Teacher' AND v.TopicIndex = %s
         ORDER BY v.UploadDate DESC
@@ -447,7 +447,7 @@ def get_topic_exercises():
         
         # Get exercises for this topic created by the teacher
         cursor.execute(
-            "SELECT * FROM Exercises WHERE UserID = %s AND TopicIndex = %s",
+            "SELECT * FROM exercises WHERE UserID = %s AND TopicIndex = %s",
             (teacher_id, topic_index)
         )
         exercises = cursor.fetchall()
