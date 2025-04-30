@@ -12,7 +12,6 @@ contourpy==1.2.0
 cryptography==42.0.2
 cycler==0.12.1
 easyocr==1.7.1
-ffmpeg-python==1.0.0  # Changed from ffmpeg
 filelock==3.9.0
 Flask==3.1.0
 Flask-Cors==4.0.0
