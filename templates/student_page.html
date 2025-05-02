@@ -203,7 +203,7 @@
                         videoContainer.appendChild(videoWrapper);
                     });
 
-                    // 添加开始练习按钮
+                    // Add a start exercise button              
                     const startExercisesBtn = document.createElement("button");
                     startExercisesBtn.textContent = "Start Exercises";
                     startExercisesBtn.className = "start-exercises";
@@ -212,6 +212,28 @@
                         loadExercises(topicIndex);
                     };
                     videoContainer.appendChild(startExercisesBtn);
+
+                    data.videos.forEach((video, index) => {
+                    const videoWrapper = document.createElement("div");
+                    videoWrapper.className = "video-wrapper";
+                    const videoElement = document.createElement("video");
+                    videoElement.controls = true;
+                    videoElement.src = video.file_path;
+                    videoElement.className = "topic-video";
+                
+                    const videoTitle = document.createElement("p");
+                    videoTitle.textContent = extractTopicName(video.file_path) || `Video ${index + 1}`;
+                    videoTitle.className = "video-title";
+                
+                    const teacherLabel = document.createElement("p");
+                    teacherLabel.textContent = `Uploaded by: ${video.teacher_name}`;
+                    teacherLabel.className = "teacher-label";
+                
+                    videoWrapper.appendChild(videoTitle);
+                    videoWrapper.appendChild(teacherLabel);
+                    videoWrapper.appendChild(videoElement);
+                    videoContainer.appendChild(videoWrapper);
+                });
     
                 } else {
                     statusElement.textContent = "No videos available for this topic yet.";
@@ -289,50 +311,6 @@
 
         // Display the current exercise
         function displayExercise(exercise) {
-            const exerciseContainer = document.getElementById("current-exercise");
-            exerciseContainer.innerHTML = "";
-
-            const teacherInfo = document.createElement("p");
-            teacherInfo.className = "exercise-teacher";
-            teacherInfo.textContent = `Created by: ${exercise.teacher_name || "Unknown"}`;
-            exerciseContainer.appendChild(teacherInfo);
-            
-            // Create question element
-            const questionElement = document.createElement("div");
-            questionElement.className = "exercise-question";
-            
-            if (exercise.question_image) {
-                const imgElement = document.createElement("img");
-                imgElement.src = exercise.question_image;
-                imgElement.alt = "Exercise image";
-                questionElement.appendChild(imgElement);
-            }
-            
-            if (exercise.question) {
-                const textElement = document.createElement("p");
-                textElement.textContent = exercise.question;
-                questionElement.appendChild(textElement);
-            }
-            
-            exerciseContainer.appendChild(questionElement);
-            
-            // Create options
-            const optionsContainer = document.createElement("div");
-            optionsContainer.className = "exercise-options";
-            
-            exercise.options.forEach((option, index) => {
-                const optionBtn = document.createElement("button");
-                optionBtn.textContent = `${String.fromCharCode(65 + index)}. ${option}`;
-                optionBtn.onclick = () => checkAnswer(index, exercise.correct_option);
-                optionsContainer.appendChild(optionBtn);
-            });
-            
-            exerciseContainer.appendChild(optionsContainer);
-            
-            // Hide next button until answer is correct
-            document.getElementById("next-exercise-btn").classList.add("hidden");
-            document.getElementById("feedback-message").textContent = "";
-        }
 
         // Check if the selected answer is correct
         function checkAnswer(selectedIndex, correctIndex) {
