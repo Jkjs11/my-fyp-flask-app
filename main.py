@@ -451,6 +451,22 @@ def get_topic_exercises():
         if 'cursor' in locals(): cursor.close()
         if 'connection' in locals(): connection.close()
 
+@app.route('/get_all_teachers', methods=['GET'])
+def get_all_teachers():
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        cursor.execute("SELECT UserID, Name FROM users WHERE Role = 'Teacher'")
+        teachers = cursor.fetchall()
+        teachers_list = [{"user_id": t[0], "name": t[1]} for t in teachers]
+        return jsonify({"teachers": teachers_list})
+    except Exception as e:
+        logging.error(f"Error fetching teachers: {e}")
+        return jsonify({"error": "Failed to load teachers"}), 500
+    finally:
+        if 'cursor' in locals(): cursor.close()
+        if 'connection' in locals(): connection.close()
+
 # Static routes
 @app.route('/')
 def homepage():
