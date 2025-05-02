@@ -387,14 +387,11 @@ def delete_exercise():
 @app.route('/get_topic_videos', methods=['GET'])
 def get_topic_videos():
     topic_index = request.args.get('topic_index')
-    
     if not topic_index:
         return jsonify({"error": "Topic index is required"}), 400
-
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
-        
         # Get all videos for this topic along with teacher's name
         query = """
         SELECT v.FilePath, u.Name 
@@ -405,20 +402,20 @@ def get_topic_videos():
         """
         cursor.execute(query, (topic_index,))
         videos = cursor.fetchall()
-        
         if not videos:
-            return jsonify({"file_urls": [], "teacher_name": "No videos available"})
-            
-        # Get the teacher's name (assuming all videos for a topic are from the same teacher)
+            return jsonify({"videos": []})
         video_list = [{"file_path": video[0], "teacher_name": video[1]} for video in videos]
         return jsonify({"videos": video_list})
-        
     except Exception as e:
         logging.error(f"Error fetching topic videos: {e}")
         return jsonify({"error": "An error occurred while fetching videos."}), 500
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'connection' in locals(): connection.close()
+
+@app.route('/uploads/<filename>')
+def serve_video(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 # Get all exercises for a topic (for students)
 @app.route('/get_topic_exercises', methods=['GET'])
