@@ -387,11 +387,14 @@ def delete_exercise():
 @app.route('/get_topic_videos', methods=['GET'])
 def get_topic_videos():
     topic_index = request.args.get('topic_index')
+    
     if not topic_index:
         return jsonify({"error": "Topic index is required"}), 400
+
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
+        
         # Get all videos for this topic along with teacher's name
         query = """
         SELECT v.FilePath, u.Name 
@@ -402,10 +405,18 @@ def get_topic_videos():
         """
         cursor.execute(query, (topic_index,))
         videos = cursor.fetchall()
+        
         if not videos:
-            return jsonify({"videos": []})
-        video_list = [{"file_path": video[0], "teacher_name": video[1]} for video in videos]
-        return jsonify({"videos": video_list})
+            return jsonify({"file_urls": [], "teacher_name": "No videos available"})
+            
+        # Get the teacher's name (assuming all videos for a topic are from the same teacher)
+        teacher_name = videos[0][1] if videos[0][1] else "Teacher"
+        file_urls = [video[0] for video in videos]
+        
+        return jsonify({
+            "file_urls": file_urls,
+            "teacher_name": teacher_name
+        })
     except Exception as e:
         logging.error(f"Error fetching topic videos: {e}")
         return jsonify({"error": "An error occurred while fetching videos."}), 500
@@ -413,52 +424,49 @@ def get_topic_videos():
         if 'cursor' in locals(): cursor.close()
         if 'connection' in locals(): connection.close()
 
-@app.route('/uploads/<filename>')
-def serve_video(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
 # Get all exercises for a topic (for students)
 @app.route('/get_topic_exercises', methods=['GET'])
 def get_topic_exercises():
     topic_index = request.args.get('topic_index')
+    
     if not topic_index:
         return jsonify({"error": "Topic index is required"}), 400
+
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
         
-        # Get all teacher information
-        cursor.execute("SELECT u.UserID, u.Name FROM users u WHERE u.Role = 'Teacher'")
-        teachers = cursor.fetchall()
+        # Get teacher's user ID
+        cursor.execute("SELECT UserID, Name FROM users WHERE Role = 'Teacher' LIMIT 1")
+        teacher = cursor.fetchone()
         
-        if not teachers:
+        if not teacher:
             return jsonify({"error": "No teacher found"}), 404
-        
-        exercises_list = []
-        for teacher_id, teacher_name in teachers:
-            # Get all exercises created by this teacher for this subject
-            cursor.execute(
-                "SELECT * FROM exercises WHERE UserID = %s AND TopicIndex = %s",
-                (teacher_id, topic_index)
-            )
-            exercises = cursor.fetchall()
             
-            for exercise in exercises:
-                exercises_list.append({
-                    "exercise_id": exercise[0],
-                    "question": exercise[3],
-                    "question_image": exercise[4],
-                    "options": [exercise[5], exercise[6], exercise[7], exercise[8]],
-                    "correct_option": exercise[9],
-                    "teacher_name": teacher_name
-                })
+        teacher_id, teacher_name = teacher
         
+        # Get exercises for this topic created by the teacher
+        cursor.execute(
+            "SELECT * FROM exercises WHERE UserID = %s AND TopicIndex = %s",
+            (teacher_id, topic_index)
+        )
+        exercises = cursor.fetchall()
+
+        exercises_list = []
+        for exercise in exercises:
+            exercises_list.append({
+                "exercise_id": exercise[0],
+                "question": exercise[3],
+                "question_image": exercise[4],
+                "options": [exercise[5], exercise[6], exercise[7], exercise[8]],
+                "correct_option": exercise[9],
+                "teacher_name": teacher_name
+            })
+
         return jsonify({"exercises": exercises_list})
-    
     except Exception as e:
         logging.error(f"Error fetching topic exercises: {e}")
         return jsonify({"error": "An error occurred while fetching exercises."}), 500
-    
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'connection' in locals(): connection.close()
