@@ -183,9 +183,9 @@
                         statusElement.className = "status-message";
                         
                         // Display teacher info
-                        const teacherInfoElement = document.getElementById("teacher-info");
+                        const teachers = [...new Set(data.videos.map(video => video.teacher_name))];
                         teacherInfoElement.innerHTML = 
-                            `<p>Video uploaded by: <strong>${data.teacher_name || "Teacher"}</strong></p>`;
+                            `<p>Videos uploaded by: <strong>${teachers.join(", ")}</strong></p>`;
                         
                         data.file_urls.forEach((url, index) => {
                             const videoWrapper = document.createElement("div");
@@ -264,7 +264,7 @@
             statusElement.className = "status-message loading";
             
             // Adjust the topic index if backend uses 1-based indexing
-            const backendTopicIndex = topicIndex + 1; // Remove this line if backend uses 0-based
+            const backendTopicIndex = topicIndex; // Remove this line if backend uses 0-based
             
             fetch(`/get_topic_exercises?topic_index=${backendTopicIndex}`) // or use topicIndex if backend is 0-based
                 .then(response => {
@@ -278,11 +278,8 @@
                         statusElement.textContent = "";
                         statusElement.className = "status-message";
                         
-                        if (data.exercises[0].teacher_name) {
-                            teacherName = data.exercises[0].teacher_name;
-                        }
-                        document.getElementById("exercise-teacher-info").innerHTML = 
-                            `<p>Exercise created by: <strong>${teacherName}</strong></p>`;
+                        exercises = data.exercises;
+                        displayExercise(exercises[currentExerciseIndex]);
                         
                         exercises = data.exercises;
                         currentExerciseIndex = 0;
@@ -312,6 +309,11 @@
         function displayExercise(exercise) {
             const exerciseContainer = document.getElementById("current-exercise");
             exerciseContainer.innerHTML = "";
+
+            const teacherInfo = document.createElement("p");
+            teacherInfo.className = "exercise-teacher";
+            teacherInfo.textContent = `Created by: ${exercise.teacher_name || "Unknown"}`;
+            exerciseContainer.appendChild(teacherInfo);
             
             // Create question element
             const questionElement = document.createElement("div");
