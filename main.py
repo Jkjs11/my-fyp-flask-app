@@ -410,13 +410,9 @@ def get_topic_videos():
             return jsonify({"file_urls": [], "teacher_name": "No videos available"})
             
         # Get the teacher's name (assuming all videos for a topic are from the same teacher)
-        teacher_name = videos[0][1] if videos[0][1] else "Teacher"
-        file_urls = [video[0] for video in videos]
+        video_list = [{"file_path": video[0], "teacher_name": video[1]} for video in videos]
+        return jsonify({"videos": video_list})
         
-        return jsonify({
-            "file_urls": file_urls,
-            "teacher_name": teacher_name
-        })
     except Exception as e:
         logging.error(f"Error fetching topic videos: {e}")
         return jsonify({"error": "An error occurred while fetching videos."}), 500
@@ -437,8 +433,8 @@ def get_topic_exercises():
         cursor = connection.cursor()
         
         # Get teacher's user ID
-        cursor.execute("SELECT UserID, Name FROM users WHERE Role = 'Teacher' LIMIT 1")
-        teacher = cursor.fetchone()
+        cursor.execute("SELECT u.UserID, u.Name FROM users u WHERE u.Role = 'Teacher'")
+        teachers = cursor.fetchall()
         
         if not teacher:
             return jsonify({"error": "No teacher found"}), 404
@@ -453,6 +449,9 @@ def get_topic_exercises():
         exercises = cursor.fetchall()
 
         exercises_list = []
+        for teacher_id, teacher_name in teachers:
+        cursor.execute("SELECT * FROM exercises WHERE UserID = %s AND TopicIndex = %s", (teacher_id, topic_index))
+        exercises = cursor.fetchall()
         for exercise in exercises:
             exercises_list.append({
                 "exercise_id": exercise[0],
