@@ -160,95 +160,77 @@
 
         // Load videos for selected topic
         function loadTopicContent(topicIndex) {
-            document.getElementById("current-topic-title").textContent = `Topic ${topicIndex + 1} Videos`;
-            const statusElement = document.getElementById("video-status");
-            statusElement.textContent = "Loading videos...";
-            statusElement.className = "status-message loading";
-            
-            // Clear previous videos
-            document.getElementById("video-container").innerHTML = "";
-            
-            fetch(`/get_topic_videos?topic_index=${topicIndex}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    const videoContainer = document.getElementById("video-container");
-                    
-                    if (data.file_urls && data.file_urls.length > 0) {
-                        statusElement.textContent = "";
-                        statusElement.className = "status-message";
-                        
-                        // Display teacher info
-                        const teachers = [...new Set(data.videos.map(video => video.teacher_name))];
-                        teacherInfoElement.innerHTML = 
-                            `<p>Videos uploaded by: <strong>${teachers.join(", ")}</strong></p>`;
-                        
-                        data.file_urls.forEach((url, index) => {
-                            const videoWrapper = document.createElement("div");
-                            videoWrapper.className = "video-wrapper";
-                            
-                            const videoElement = document.createElement("video");
-                            videoElement.controls = true;
-                            videoElement.src = url;
-                            videoElement.className = "topic-video";
-                            
-                            const videoTitle = document.createElement("p");
-                            videoTitle.textContent = extractTopicName(url) || `Video ${index + 1}`;
-                            videoTitle.className = "video-title";
-                            
-                            videoWrapper.appendChild(videoTitle);
-                            videoWrapper.appendChild(videoElement);
-                            videoContainer.appendChild(videoWrapper);
-                        });
-                        
-                        // Add button to start exercises
-                        const startExercisesBtn = document.createElement("button");
-                        startExercisesBtn.textContent = "Start Exercises";
-                        startExercisesBtn.className = "start-exercises";
-                        startExercisesBtn.onclick = () => {
-                            playClickSound();
-                            loadExercises(topicIndex);
-                        };
-                        videoContainer.appendChild(startExercisesBtn);
-                    } else {
-                        statusElement.textContent = "No videos available for this topic yet.";
-                        statusElement.className = "status-message info";
-                        document.getElementById("teacher-info").innerHTML = "";
-                    }
-                })
-                .catch(error => {
-                    console.error("Error loading videos:", error);
-                    statusElement.textContent = `Error loading videos: ${error.message}`;
-                    statusElement.className = "status-message error";
-                    document.getElementById("teacher-info").innerHTML = "";
-                });
-        }
+        document.getElementById("current-topic-title").textContent = `Topic ${topicIndex + 1} Videos`;
+        const statusElement = document.getElementById("video-status");
+        const videoContainer = document.getElementById("video-container");
+        const teacherInfoElement = document.getElementById("teacher-info");
+    
+        statusElement.textContent = "Loading videos...";
+        statusElement.className = "status-message loading";
+        videoContainer.innerHTML = "";
+        teacherInfoElement.innerHTML = "";
+    
+        fetch(`/get_topic_videos?topic_index=${topicIndex}`)
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                if (data.videos && data.videos.length > 0) {
+                    statusElement.textContent = "";
+                    statusElement.className = "status-message";
+    
+                    // 提取所有教师名并去重显示
+                    const teachers = [...new Set(data.videos.map(video => video.teacher_name))];
+                    teacherInfoElement.innerHTML = 
+                        `<p>Videos uploaded by: <strong>${teachers.join(", ")}</strong></p>`;
+    
+                    data.videos.forEach((video, index) => {
+                        const videoWrapper = document.createElement("div");
+                        videoWrapper.className = "video-wrapper";
+    
+                        const videoElement = document.createElement("video");
+                        videoElement.controls = true;
+                        videoElement.src = video.file_path;  // 使用 file_path
+                        videoElement.className = "topic-video";
+    
+                        const videoTitle = document.createElement("p");
+                        videoTitle.textContent = extractTopicName(video.file_path) || `Video ${index + 1}`;
+                        videoTitle.className = "video-title";
+    
+                        videoWrapper.appendChild(videoTitle);
+                        videoWrapper.appendChild(videoElement);
+                        videoContainer.appendChild(videoWrapper);
+                    });
+
+                    // 添加开始练习按钮
+                    const startExercisesBtn = document.createElement("button");
+                    startExercisesBtn.textContent = "Start Exercises";
+                    startExercisesBtn.className = "start-exercises";
+                    startExercisesBtn.onclick = () => {
+                        playClickSound();
+                        loadExercises(topicIndex);
+                    };
+                    videoContainer.appendChild(startExercisesBtn);
+    
+                } else {
+                    statusElement.textContent = "No videos available for this topic yet.";
+                    statusElement.className = "status-message info";
+                }
+            })
+            .catch(error => {
+                console.error("Error loading videos:", error);
+                statusElement.textContent = `Error loading videos: ${error.message}`;
+                statusElement.className = "status-message error";
+            });
+    }
 
         // Helper function to extract topic name from file path
         function extractTopicName(filePath) {
-            // Map of known topic names with their correct formatting
-            const topicNameMap = {
-                'Numbers_Up_To_100': 'Numbers Up To 100',
-                'Addition_and_Subtraction': 'Addition and Subtraction',
-                'Fractions': 'Fractions',
-                'Money': 'Money',
-                'Time': 'Time',
-                'Length_Mass_and_Volume_of_Liquid': 'Length, Mass and Volume of Liquid',
-                'Shapes': 'Shapes',
-                'Data': 'Data'
-            };
-
             const filename = filePath.split('/').pop().split('\\').pop();
-            const withoutExt = filename.replace(/\.[^/.]+$/, "");
-    
-            const match = withoutExt.match(/Topic_\d+_(.+)/);
-    
+            const match = filename.match(/Topic_\d+_(.+?)\.\w+$/);  // 匹配 Topic_x_之后的部分
             if (match && match[1]) {
-                return topicNameMap[match[1]] || match[1].replace(/_/g, ' ');
+                return match[1].replace(/_/g, ' ');
             }
             return null;
         }
