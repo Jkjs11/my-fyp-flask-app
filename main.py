@@ -450,7 +450,7 @@ def get_topic_exercises():
 
         exercises_list = []
         for teacher_id, teacher_name in teachers:
-        cursor.execute("SELECT * FROM exercises WHERE UserID = %s AND TopicIndex = %s", (teacher_id, topic_index))
+            cursor.execute("SELECT * FROM exercises WHERE UserID = %s AND TopicIndex = %s", (teacher_id, topic_index))
         exercises = cursor.fetchall()
         for exercise in exercises:
             exercises_list.append({
