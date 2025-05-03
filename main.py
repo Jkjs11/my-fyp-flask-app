@@ -5,6 +5,7 @@ from datetime import datetime
 import logging
 import pymysql.cursors
 from dotenv import load_dotenv
+import base64
 
 # Load environment variables
 load_dotenv()
@@ -288,13 +289,17 @@ def save_exercise():
         image_path = ''
         if 'question_image' in data and data['question_image']:
             try:
+                # Verify the image folder exists
+                os.makedirs(app.config['EXERCISE_IMAGE_FOLDER'], exist_ok=True)
+                
                 # Decode base64 image data
-                image_data = data['question_image'].split(',')[1]  # Remove data:image/... prefix
+                header, image_data = data['question_image'].split(',', 1)
                 image_bytes = base64.b64decode(image_data)
                 
-                # Generate unique filename
+                # Generate unique filename with proper extension
+                file_extension = header.split('/')[1].split(';')[0]  # Extract extension from data URL
                 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-                filename = f"exercise_{user_id}_{timestamp}.jpg"
+                filename = f"exercise_{user_id}_{timestamp}.{file_extension}"
                 image_path = os.path.join(app.config['EXERCISE_IMAGE_FOLDER'], filename)
                 
                 # Save image to file system
@@ -302,7 +307,7 @@ def save_exercise():
                     f.write(image_bytes)
             except Exception as e:
                 logging.error(f"Error saving exercise image: {e}")
-                return jsonify({"error": "Failed to save image"}), 500
+                return jsonify({"error": f"Failed to save image: {str(e)}"}), 500
 
         connection = get_db_connection()
         with connection.cursor() as cursor:
