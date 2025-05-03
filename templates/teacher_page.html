@@ -114,15 +114,16 @@ function uploadVideo(topicIndex) {
         uploadedVideosPerTopic[topicIndex] = [];
     }
 
-    // Get existing video URLs for this topic
-    const existingVideos = uploadedVideosPerTopic[topicIndex];
+    // Clear any existing event listeners to prevent duplicates
+    input.replaceWith(input.cloneNode(true));
+    const newInput = document.getElementById(`upload-input-${topicIndex}`);
 
-    input.addEventListener('change', function () {
-        const files = Array.from(input.files);
+    newInput.addEventListener('change', function() {
+        const files = Array.from(this.files);
         const validFiles = files.filter(file => {
             const fileType = file.type.split('/')[0];
             const fileSizeMB = file.size / (1024 * 1024);
-            return fileType === 'video' && fileSizeMB <= 200; // Allow videos up to 200MB
+            return fileType === 'video' && fileSizeMB <= 200;
         });
 
         if (validFiles.length === 0) {
@@ -132,24 +133,10 @@ function uploadVideo(topicIndex) {
 
         const formData = new FormData();
         validFiles.forEach(file => {
-            // Create a URL for the file to check against existing videos
-            const fileURL = URL.createObjectURL(file);
-
-            // Check if the file URL already exists for this topic
-            if (!existingVideos.includes(fileURL)) {
-                formData.append('file', file);
-            } else {
-                alert(`File "${file.name}" has already been uploaded for this topic.`);
-            }
+            formData.append('file', file);
         });
 
-        if (formData.getAll('file').length === 0) {
-            alert('No new valid files to upload.');
-            return;
-        }
-
         formData.append('topic_index', topicIndex);
-        formData.append('user_id', sessionStorage.getItem('UserID')); // Include UserID
 
         fetch('/upload', {
             method: 'POST',
@@ -162,13 +149,15 @@ function uploadVideo(topicIndex) {
             return response.json();
         })
         .then(data => {
-            data.file_urls.forEach(url => {
-                if (!existingVideos.includes(url)) { // Prevent duplicates
-                    addVideoToContainer(videoContainer, url);
-                    existingVideos.push(url); // Update the list of uploaded videos for this topic
-                }
-            });
-            input.value = ''; // Reset file input
+            if (data.file_urls && data.file_urls.length > 0) {
+                data.file_urls.forEach(url => {
+                    if (!uploadedVideosPerTopic[topicIndex].includes(url)) {
+                        addVideoToContainer(videoContainer, url);
+                        uploadedVideosPerTopic[topicIndex].push(url);
+                    }
+                });
+            }
+            newInput.value = '';
         })
         .catch(error => {
             console.error('Error uploading videos:', error);
@@ -176,8 +165,7 @@ function uploadVideo(topicIndex) {
         });
     });
 
-    // Trigger the file input click to open the file dialog
-    input.click();
+    newInput.click();
 }
 
     function deleteAllVideos(topicIndex) {
