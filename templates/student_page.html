@@ -183,25 +183,30 @@
                         statusElement.className = "status-message";
                         
                         // Display teacher info
-                        const teacherInfoElement = document.getElementById("teacher-info");
-                        teacherInfoElement.innerHTML = 
-                            `<p>Video uploaded by: <strong>${data.teacher_name || "Teacher"}</strong></p>`;
+                        const teacherInfoContainer = document.getElementById("teacher-info");
+                        teacherInfoContainer.innerHTML = ""; // Clear previous info
                         
-                        data.file_urls.forEach((url, index) => {
+                        data.videos.forEach(video => {
+                            const teacherInfo = document.createElement("div");
+                            teacherInfo.textContent = `Uploaded by: ${video.teacher_name}`;
+                            teacherInfoContainer.appendChild(teacherInfo);
+                        });
+                        
+                        data.videos.forEach((video, index) => {
                             const videoWrapper = document.createElement("div");
                             videoWrapper.className = "video-wrapper";
-                            
+                        
+                            const teacherLabel = document.createElement("p");
+                            teacherLabel.textContent = `Teacher: ${video.teacher_name}`;
+                            teacherLabel.style.fontWeight = "bold";
+                            videoWrapper.appendChild(teacherLabel);
+                        
                             const videoElement = document.createElement("video");
                             videoElement.controls = true;
-                            videoElement.src = url;
+                            videoElement.src = video.file_url;
                             videoElement.className = "topic-video";
-                            
-                            const videoTitle = document.createElement("p");
-                            videoTitle.textContent = extractTopicName(url) || `Video ${index + 1}`;
-                            videoTitle.className = "video-title";
-                            
-                            videoWrapper.appendChild(videoTitle);
                             videoWrapper.appendChild(videoElement);
+                        
                             videoContainer.appendChild(videoWrapper);
                         });
                         
@@ -278,11 +283,8 @@
                         statusElement.textContent = "";
                         statusElement.className = "status-message";
                         
-                        if (data.exercises[0].teacher_name) {
-                            teacherName = data.exercises[0].teacher_name;
-                        }
-                        document.getElementById("exercise-teacher-info").innerHTML = 
-                            `<p>Exercise created by: <strong>${teacherName}</strong></p>`;
+                       document.getElementById("exercise-teacher-info").innerHTML =
+    `                       <p>Exercise created by: <strong>${exercise.teacher_name}</strong></p>`;
                         
                         exercises = data.exercises;
                         currentExerciseIndex = 0;
@@ -328,6 +330,12 @@
                 const textElement = document.createElement("p");
                 textElement.textContent = exercise.question;
                 questionElement.appendChild(textElement);
+            }
+
+            if (exercise.teacher_name) {
+                const teacherInfo = document.createElement("p");
+                teacherInfo.innerHTML = `Created by: <strong>${exercise.teacher_name}</strong>`;
+                questionElement.appendChild(teacherInfo);
             }
             
             exerciseContainer.appendChild(questionElement);
