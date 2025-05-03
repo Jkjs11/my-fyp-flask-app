@@ -267,10 +267,7 @@
             statusElement.textContent = "Loading exercises...";
             statusElement.className = "status-message loading";
             
-            // Adjust the topic index if backend uses 1-based indexing
-            const backendTopicIndex = topicIndex + 1; // Remove this line if backend uses 0-based
-            
-            fetch(`/get_topic_exercises?topic_index=${backendTopicIndex}`) // or use topicIndex if backend is 0-based
+            fetch(`/get_topic_exercises?topic_index=${topicIndex + 1}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
@@ -282,36 +279,26 @@
                         statusElement.textContent = "";
                         statusElement.className = "status-message";
                         
-                        if (data.exercises[0].teacher_name) {
-                            teacherName = data.exercises[0].teacher_name;
-                        }
-                        document.getElementById("exercise-teacher-info").innerHTML = 
-                            `<p>Exercise created by: <strong>${teacherName}</strong></p>`;
-                        
                         exercises = data.exercises;
                         currentExerciseIndex = 0;
                         completedExercises = [];
                         updateProgress();
                         displayExercise(exercises[0]);
                         
-                        // Start background music when exercises begin if enabled
                         if (musicEnabled) {
                             backgroundMusic.play().catch(e => console.log("Play prevented:", e));
                         }
                     } else {
                         statusElement.textContent = "No exercises available for this topic yet.";
                         statusElement.className = "status-message info";
-                        document.getElementById("exercise-teacher-info").innerHTML = "";
                     }
                 })
                 .catch(error => {
                     console.error("Error loading exercises:", error);
                     statusElement.textContent = `Error loading exercises: ${error.message}`;
                     statusElement.className = "status-message error";
-                    document.getElementById("exercise-teacher-info").innerHTML = "";
                 });
         }
-
         // Display the current exercise
         function displayExercise(exercise) {
             const exerciseContainer = document.getElementById("current-exercise");
@@ -349,6 +336,10 @@
             
             exerciseContainer.appendChild(optionsContainer);
             
+            // Update teacher info for this specific exercise
+            document.getElementById("exercise-teacher-info").innerHTML = 
+                `<p>Exercise created by: <strong>${exercise.teacher_name}</strong></p>`;
+            
             // Hide next button until answer is correct
             document.getElementById("next-exercise-btn").classList.add("hidden");
             document.getElementById("feedback-message").textContent = "";
@@ -383,7 +374,6 @@
 
         // Load the next exercise
         function loadNextExercise() {
-            // Only allow proceeding to next exercise if current one is completed
             if (completedExercises.includes(currentExerciseIndex)) {
                 currentExerciseIndex++;
                 
@@ -392,9 +382,9 @@
                 } else {
                     // All exercises completed
                     document.getElementById("current-exercise").innerHTML = 
-                        `<p class='completion-message'>You've completed all exercises for this topic!</p>
-                         <p class='completion-message'>Created by: <strong>${teacherName}</strong></p>`;
+                        `<p class='completion-message'>You've completed all exercises for this topic!</p>`;
                     document.getElementById("next-exercise-btn").classList.add("hidden");
+                    document.getElementById("exercise-teacher-info").innerHTML = "";
                 }
             }
         }
