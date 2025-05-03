@@ -387,36 +387,30 @@ def delete_exercise():
 @app.route('/get_topic_videos', methods=['GET'])
 def get_topic_videos():
     topic_index = request.args.get('topic_index')
-    
     if not topic_index:
         return jsonify({"error": "Topic index is required"}), 400
-
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
-        
         # Get all videos for this topic along with teacher's name
         query = """
-        SELECT v.FilePath, u.Name 
-        FROM videos v
-        JOIN users u ON v.UserID = u.UserID
-        WHERE u.Role = 'Teacher' AND v.TopicIndex = %s
-        ORDER BY v.UploadDate DESC
+            SELECT v.FilePath, u.Name  
+            FROM videos v
+            JOIN users u ON v.UserID = u.UserID
+            WHERE u.Role = 'Teacher' AND v.TopicIndex = %s
+            ORDER BY v.UploadDate DESC
         """
         cursor.execute(query, (topic_index,))
         videos = cursor.fetchall()
         
-        if not videos:
-            return jsonify({"file_urls": [], "teacher_name": "No videos available"})
-            
-        # Get the teacher's name (assuming all videos for a topic are from the same teacher)
-        teacher_name = videos[0][1] if videos[0][1] else "Teacher"
-        file_urls = [video[0] for video in videos]
-        
-        return jsonify({
-            "file_urls": file_urls,
-            "teacher_name": teacher_name
-        })
+        video_list = []
+        for video in videos:
+            video_list.append({
+                "file_url": video[0],
+                "teacher_name": video[1] or "Teacher"
+            })
+
+        return jsonify({"videos": video_list})
     except Exception as e:
         logging.error(f"Error fetching topic videos: {e}")
         return jsonify({"error": "An error occurred while fetching videos."}), 500
@@ -428,30 +422,21 @@ def get_topic_videos():
 @app.route('/get_topic_exercises', methods=['GET'])
 def get_topic_exercises():
     topic_index = request.args.get('topic_index')
-    
     if not topic_index:
         return jsonify({"error": "Topic index is required"}), 400
-
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
-        
-        # Get teacher's user ID
-        cursor.execute("SELECT UserID, Name FROM users WHERE Role = 'Teacher' LIMIT 1")
-        teacher = cursor.fetchone()
-        
-        if not teacher:
-            return jsonify({"error": "No teacher found"}), 404
-            
-        teacher_id, teacher_name = teacher
-        
-        # Get exercises for this topic created by the teacher
-        cursor.execute(
-            "SELECT * FROM exercises WHERE UserID = %s AND TopicIndex = %s",
-            (teacher_id, topic_index)
-        )
-        exercises = cursor.fetchall()
 
+        # Get ALL exercises for this topic created by ANY teacher
+        cursor.execute("""
+            SELECT e.*, u.Name as teacher_name 
+            FROM exercises e
+            JOIN users u ON e.UserID = u.UserID
+            WHERE u.Role = 'Teacher' AND e.TopicIndex = %s
+        """, (topic_index,))
+
+        exercises = cursor.fetchall()
         exercises_list = []
         for exercise in exercises:
             exercises_list.append({
@@ -460,9 +445,8 @@ def get_topic_exercises():
                 "question_image": exercise[4],
                 "options": [exercise[5], exercise[6], exercise[7], exercise[8]],
                 "correct_option": exercise[9],
-                "teacher_name": teacher_name
+                "teacher_name": exercise[10]
             })
-
         return jsonify({"exercises": exercises_list})
     except Exception as e:
         logging.error(f"Error fetching topic exercises: {e}")
