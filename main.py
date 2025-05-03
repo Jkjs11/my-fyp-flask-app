@@ -455,7 +455,8 @@ def get_topic_exercises():
                 "question_image": exercise[4],
                 "options": [exercise[5], exercise[6], exercise[7], exercise[8]],
                 "correct_option": exercise[9],
-                "teacher_name": exercise[10]  # The teacher's name from the join
+                "teacher_name": exercise[10],  # The teacher's name from the join
+                "created_date": exercise[2].strftime("%a, %d %b %Y %H:%M:%S GMT")  # Format the creation date
             })
 
         return jsonify({"exercises": exercises_list})
