@@ -455,8 +455,7 @@ def get_topic_exercises():
                 "question_image": exercise[4],
                 "options": [exercise[5], exercise[6], exercise[7], exercise[8]],
                 "correct_option": exercise[9],
-                "teacher_name": exercise[10],  # The teacher's name from the join
-                "created_date": exercise[2].strftime("%a, %d %b %Y %H:%M:%S GMT")  # Format the creation date
+                "teacher_name": exercise[10]  # The teacher's name from the join
             })
 
         return jsonify({"exercises": exercises_list})
@@ -517,4 +516,4 @@ def serve_exercise_image(filename):
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8000))
-    app.run(host='0.0.0.0', port=port)
+app.run(host='0.0.0.0', port=port)
