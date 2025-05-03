@@ -403,12 +403,12 @@ def get_topic_videos():
         cursor.execute(query, (topic_index,))
         videos = cursor.fetchall()
         
-    video_list = []
-        for video in videos:
-            video_list.append({
-                "file_url": video[0],
-                "teacher_name": video[1] or "Teacher"
-            })            
+        video_list = []
+            for video in videos:
+                video_list.append({
+                    "file_url": video[0],
+                    "teacher_name": video[1] or "Teacher"
+                })            
             
         return jsonify({
             "videos": video_list
