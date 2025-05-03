@@ -497,7 +497,7 @@ def ThankYou():
 def teacher_page():
     if session.get('Role') != 'Teacher':
         return redirect(url_for('Login'))
-    return render_template('teacher_page.html')
+    return render_template('teacher_page.html', user_id=session.get('UserID'))
 
 @app.route('/teacher_exercise_page')
 def teacher_exercise_page():
