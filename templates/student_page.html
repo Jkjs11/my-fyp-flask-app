@@ -178,38 +178,38 @@
                 .then(data => {
                     const videoContainer = document.getElementById("video-container");
                     
-                    if (data.file_urls && data.file_urls.length > 0) {
+                    if (data.videos && data.videos.length > 0) {
                         statusElement.textContent = "";
                         statusElement.className = "status-message";
-                        
-                        // Display teacher info
+                    
                         const teacherInfoContainer = document.getElementById("teacher-info");
                         teacherInfoContainer.innerHTML = ""; // Clear previous info
-                        
-                        data.videos.forEach(video => {
+                    
+                        const videoContainer = document.getElementById("video-container");
+                    
+                        data.videos.forEach((video, index) => {
+                            // Optional: Show who uploaded each video
                             const teacherInfo = document.createElement("div");
                             teacherInfo.textContent = `Uploaded by: ${video.teacher_name}`;
                             teacherInfoContainer.appendChild(teacherInfo);
-                        });
-                        
-                        data.videos.forEach((video, index) => {
+                    
                             const videoWrapper = document.createElement("div");
                             videoWrapper.className = "video-wrapper";
-                        
+                    
                             const teacherLabel = document.createElement("p");
                             teacherLabel.textContent = `Teacher: ${video.teacher_name}`;
                             teacherLabel.style.fontWeight = "bold";
                             videoWrapper.appendChild(teacherLabel);
-                        
+                    
                             const videoElement = document.createElement("video");
                             videoElement.controls = true;
                             videoElement.src = video.file_url;
                             videoElement.className = "topic-video";
                             videoWrapper.appendChild(videoElement);
-                        
+                    
                             videoContainer.appendChild(videoWrapper);
                         });
-                        
+                    
                         // Add button to start exercises
                         const startExercisesBtn = document.createElement("button");
                         startExercisesBtn.textContent = "Start Exercises";
@@ -224,7 +224,7 @@
                         statusElement.className = "status-message info";
                         document.getElementById("teacher-info").innerHTML = "";
                     }
-                })
+                
                 .catch(error => {
                     console.error("Error loading videos:", error);
                     statusElement.textContent = `Error loading videos: ${error.message}`;
