@@ -436,13 +436,15 @@ def get_topic_exercises():
         connection = get_db_connection()
         cursor = connection.cursor()
         
-        # Get all exercises for this topic from all teachers
+        # Modified query to get teacher names
         query = """
-        SELECT e.*, u.Name 
+        SELECT e.ExerciseID, e.TopicIndex, e.Question, e.QuestionImage,
+               e.Option1, e.Option2, e.Option3, e.Option4, e.CorrectOption,
+               u.Name AS TeacherName
         FROM exercises e
         JOIN users u ON e.UserID = u.UserID
-        WHERE u.Role = 'Teacher' AND e.TopicIndex = %s
-        ORDER BY u.Name
+        WHERE e.TopicIndex = %s AND u.Role = 'Teacher'
+        ORDER BY e.ExerciseID
         """
         cursor.execute(query, (topic_index,))
         exercises = cursor.fetchall()
@@ -451,11 +453,12 @@ def get_topic_exercises():
         for exercise in exercises:
             exercises_list.append({
                 "exercise_id": exercise[0],
-                "question": exercise[3],
-                "question_image": exercise[4],
-                "options": [exercise[5], exercise[6], exercise[7], exercise[8]],
-                "correct_option": exercise[9],
-                "teacher_name": exercise[10]  # The teacher's name from the join
+                "topic_index": exercise[1],
+                "question": exercise[2],
+                "question_image": exercise[3],
+                "options": [exercise[4], exercise[5], exercise[6], exercise[7]],
+                "correct_option": exercise[8],
+                "teacher_name": exercise[9]  # Teacher's name from the join
             })
 
         return jsonify({"exercises": exercises_list})
