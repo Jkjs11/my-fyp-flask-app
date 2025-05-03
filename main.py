@@ -114,46 +114,59 @@ def login_now():
 @app.route('/upload', methods=['POST'])
 def upload():
     if 'file' not in request.files:
+        app.logger.error("No file part in request")
         return jsonify({"error": "No file part"}), 400
+        
     files = request.files.getlist('file')
     topic_index = request.form.get('topic_index')
     user_id = session.get('UserID')
+    
     if not user_id:
+        app.logger.error("User not logged in for upload")
         return jsonify({"error": "User not logged in"}), 403
+        
+    if not files or all(file.filename == '' for file in files):
+        app.logger.error("No selected files")
+        return jsonify({"error": "No selected files"}), 400
+        
     file_urls = []
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
+        
         for file in files:
             if file and allowed_video_file(file.filename):
                 filename = secure_filename(file.filename)
-
-                # Check if the file already exists for this user and topic
-                cursor.execute(
-                    "SELECT FilePath FROM videos WHERE UserID = %s AND TopicIndex = %s AND FilePath LIKE %s",
-                    (user_id, topic_index, f"%{filename}")
-                )
-                existing_file = cursor.fetchone()
-                if existing_file:
-                    continue  # Skip duplicate files for the same topic
-
-                # Ensure filename is unique to prevent overwrites
                 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
                 unique_filename = f"{timestamp}_{filename}"
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-                file.save(file_path)
-
-                # Save metadata to the database
-                query = "INSERT INTO videos (UserID, TopicIndex, FilePath, UploadDate) VALUES (%s, %s, %s, %s)"
-                cursor.execute(query, (user_id, topic_index, file_path, datetime.now()))
-                connection.commit()
-                file_urls.append(file_path)
-        connection.close()
+                
+                try:
+                    file.save(file_path)
+                except Exception as e:
+                    app.logger.error(f"Error saving file {filename}: {str(e)}")
+                    continue
+                
+                try:
+                    cursor.execute(
+                        "INSERT INTO videos (UserID, TopicIndex, FilePath, UploadDate) VALUES (%s, %s, %s, %s)",
+                        (user_id, topic_index, file_path, datetime.now())
+                    )
+                    file_urls.append(file_path)
+                except Exception as e:
+                    app.logger.error(f"Error saving to database: {str(e)}")
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+        
+        connection.commit()
+        return jsonify({"file_urls": file_urls})
+        
     except Exception as e:
-        logging.error(f"Error saving video to database: {e}")
+        app.logger.error(f"Upload error: {str(e)}")
         return jsonify({"error": "An error occurred while uploading videos."}), 500
-
-    return jsonify({"file_urls": file_urls})
+    finally:
+        if 'cursor' in locals(): cursor.close()
+        if 'connection' in locals(): connection.close()
 
 @app.route('/delete_all', methods=['POST'])
 def delete_all():
