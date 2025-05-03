@@ -121,6 +121,8 @@ def upload():
     topic_index = request.form.get('topic_index')
     user_id = session.get('UserID')
     
+    app.logger.info(f"Upload attempt - UserID: {user_id}, Topic: {topic_index}, Files: {[f.filename for f in files]}")
+    
     if not user_id:
         app.logger.error("User not logged in for upload")
         return jsonify({"error": "User not logged in"}), 403
@@ -141,8 +143,11 @@ def upload():
                 unique_filename = f"{timestamp}_{filename}"
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
                 
+                app.logger.info(f"Attempting to save file: {file_path}")
+                
                 try:
                     file.save(file_path)
+                    app.logger.info(f"File saved successfully: {file_path}")
                 except Exception as e:
                     app.logger.error(f"Error saving file {filename}: {str(e)}")
                     continue
@@ -159,11 +164,12 @@ def upload():
                         os.remove(file_path)
         
         connection.commit()
+        app.logger.info(f"Upload successful for {len(file_urls)} files")
         return jsonify({"file_urls": file_urls})
         
     except Exception as e:
-        app.logger.error(f"Upload error: {str(e)}")
-        return jsonify({"error": "An error occurred while uploading videos."}), 500
+        app.logger.error(f"Upload error: {str(e)}", exc_info=True)
+        return jsonify({"error": "An error occurred while uploading videos.", "details": str(e)}), 500
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'connection' in locals(): connection.close()
