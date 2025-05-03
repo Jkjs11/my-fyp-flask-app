@@ -160,73 +160,78 @@
 
         // Load videos for selected topic
         function loadTopicContent(topicIndex) {
-            document.getElementById("current-topic-title").textContent = `Topic ${topicIndex + 1} Videos`;
-            const statusElement = document.getElementById("video-status");
-            statusElement.textContent = "Loading videos...";
-            statusElement.className = "status-message loading";
-            
-            // Clear previous videos
-            document.getElementById("video-container").innerHTML = "";
-            
-            fetch(`/get_topic_videos?topic_index=${topicIndex}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    const videoContainer = document.getElementById("video-container");
+        document.getElementById("current-topic-title").textContent = `Topic ${topicIndex + 1} Videos`;
+        const statusElement = document.getElementById("video-status");
+        statusElement.textContent = "Loading videos...";
+        statusElement.className = "status-message loading";
+        
+        // Clear previous videos
+        document.getElementById("video-container").innerHTML = "";
+        
+        fetch(`/get_topic_videos?topic_index=${topicIndex}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const videoContainer = document.getElementById("video-container");
+                
+                if (data.file_urls && data.file_urls.length > 0) {
+                    statusElement.textContent = "";
+                    statusElement.className = "status-message";
                     
-                    if (data.file_urls && data.file_urls.length > 0) {
-                        statusElement.textContent = "";
-                        statusElement.className = "status-message";
-                        
-                        // Display teacher info
-                        const teacherInfoElement = document.getElementById("teacher-info");
+                    // Display teacher info
+                    const teacherInfoElement = document.getElementById("teacher-info");
+                    if (data.teachers && data.teachers.length > 0) {
                         teacherInfoElement.innerHTML = 
-                            `<p>Video uploaded by: <strong>${data.teacher_name || "Teacher"}</strong></p>`;
-                        
-                        data.file_urls.forEach((url, index) => {
-                            const videoWrapper = document.createElement("div");
-                            videoWrapper.className = "video-wrapper";
-                            
-                            const videoElement = document.createElement("video");
-                            videoElement.controls = true;
-                            videoElement.src = url;
-                            videoElement.className = "topic-video";
-                            
-                            const videoTitle = document.createElement("p");
-                            videoTitle.textContent = extractTopicName(url) || `Video ${index + 1}`;
-                            videoTitle.className = "video-title";
-                            
-                            videoWrapper.appendChild(videoTitle);
-                            videoWrapper.appendChild(videoElement);
-                            videoContainer.appendChild(videoWrapper);
-                        });
-                        
-                        // Add button to start exercises
-                        const startExercisesBtn = document.createElement("button");
-                        startExercisesBtn.textContent = "Start Exercises";
-                        startExercisesBtn.className = "start-exercises";
-                        startExercisesBtn.onclick = () => {
-                            playClickSound();
-                            loadExercises(topicIndex);
-                        };
-                        videoContainer.appendChild(startExercisesBtn);
+                            `<p>Videos uploaded by: <strong>${data.teachers.join(', ')}</strong></p>`;
                     } else {
-                        statusElement.textContent = "No videos available for this topic yet.";
-                        statusElement.className = "status-message info";
-                        document.getElementById("teacher-info").innerHTML = "";
+                        teacherInfoElement.innerHTML = "";
                     }
-                })
-                .catch(error => {
-                    console.error("Error loading videos:", error);
-                    statusElement.textContent = `Error loading videos: ${error.message}`;
-                    statusElement.className = "status-message error";
+                    
+                    // Rest of the video loading code remains the same...
+                    data.file_urls.forEach((url, index) => {
+                        const videoWrapper = document.createElement("div");
+                        videoWrapper.className = "video-wrapper";
+                        
+                        const videoElement = document.createElement("video");
+                        videoElement.controls = true;
+                        videoElement.src = url;
+                        videoElement.className = "topic-video";
+                        
+                        const videoTitle = document.createElement("p");
+                        videoTitle.textContent = extractTopicName(url) || `Video ${index + 1}`;
+                        videoTitle.className = "video-title";
+                        
+                        videoWrapper.appendChild(videoTitle);
+                        videoWrapper.appendChild(videoElement);
+                        videoContainer.appendChild(videoWrapper);
+                    });
+                    
+                    // Add button to start exercises
+                    const startExercisesBtn = document.createElement("button");
+                    startExercisesBtn.textContent = "Start Exercises";
+                    startExercisesBtn.className = "start-exercises";
+                    startExercisesBtn.onclick = () => {
+                        playClickSound();
+                        loadExercises(topicIndex);
+                    };
+                    videoContainer.appendChild(startExercisesBtn);
+                } else {
+                    statusElement.textContent = "No videos available for this topic yet.";
+                    statusElement.className = "status-message info";
                     document.getElementById("teacher-info").innerHTML = "";
-                });
-        }
+                }
+            })
+            .catch(error => {
+                console.error("Error loading videos:", error);
+                statusElement.textContent = `Error loading videos: ${error.message}`;
+                statusElement.className = "status-message error";
+                document.getElementById("teacher-info").innerHTML = "";
+            });
+    }
 
         // Helper function to extract topic name from file path
         function extractTopicName(filePath) {
