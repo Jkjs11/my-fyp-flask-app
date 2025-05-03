@@ -395,7 +395,7 @@ def get_topic_videos():
         connection = get_db_connection()
         cursor = connection.cursor()
         
-        # Get all videos for this topic along with teacher's name
+        # Get all videos for this topic from all teachers
         query = """
         SELECT v.FilePath, u.Name 
         FROM videos v
@@ -407,15 +407,15 @@ def get_topic_videos():
         videos = cursor.fetchall()
         
         if not videos:
-            return jsonify({"file_urls": [], "teacher_name": "No videos available"})
+            return jsonify({"file_urls": [], "teachers": []})
             
-        # Get the teacher's name (assuming all videos for a topic are from the same teacher)
-        teacher_name = videos[0][1] if videos[0][1] else "Teacher"
+        # Get unique teacher names
+        teachers = list(set([video[1] for video in videos if video[1]]))
         file_urls = [video[0] for video in videos]
         
         return jsonify({
             "file_urls": file_urls,
-            "teacher_name": teacher_name
+            "teachers": teachers
         })
     except Exception as e:
         logging.error(f"Error fetching topic videos: {e}")
@@ -436,20 +436,15 @@ def get_topic_exercises():
         connection = get_db_connection()
         cursor = connection.cursor()
         
-        # Get teacher's user ID
-        cursor.execute("SELECT UserID, Name FROM users WHERE Role = 'Teacher' LIMIT 1")
-        teacher = cursor.fetchone()
-        
-        if not teacher:
-            return jsonify({"error": "No teacher found"}), 404
-            
-        teacher_id, teacher_name = teacher
-        
-        # Get exercises for this topic created by the teacher
-        cursor.execute(
-            "SELECT * FROM exercises WHERE UserID = %s AND TopicIndex = %s",
-            (teacher_id, topic_index)
-        )
+        # Get all exercises for this topic from all teachers
+        query = """
+        SELECT e.*, u.Name 
+        FROM exercises e
+        JOIN users u ON e.UserID = u.UserID
+        WHERE u.Role = 'Teacher' AND e.TopicIndex = %s
+        ORDER BY u.Name
+        """
+        cursor.execute(query, (topic_index,))
         exercises = cursor.fetchall()
 
         exercises_list = []
@@ -460,7 +455,7 @@ def get_topic_exercises():
                 "question_image": exercise[4],
                 "options": [exercise[5], exercise[6], exercise[7], exercise[8]],
                 "correct_option": exercise[9],
-                "teacher_name": teacher_name
+                "teacher_name": exercise[10]  # The teacher's name from the join
             })
 
         return jsonify({"exercises": exercises_list})
