@@ -438,7 +438,9 @@ def get_topic_exercises():
         
         # Get all exercises for this topic from all teachers
         query = """
-        SELECT e.*, u.Name 
+        SELECT e.ExerciseID, e.UserID, e.TopicIndex, e.Question, e.QuestionImage,
+               e.Option1, e.Option2, e.Option3, e.Option4, e.CorrectOption,
+               u.Name 
         FROM exercises e
         JOIN users u ON e.UserID = u.UserID
         WHERE u.Role = 'Teacher' AND e.TopicIndex = %s
