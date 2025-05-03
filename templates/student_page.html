@@ -189,9 +189,8 @@
                             `<p>Videos uploaded by: <strong>${data.teachers.join(', ')}</strong></p>`;
                     } else {
                         teacherInfoElement.innerHTML = "";
-                    }
-                    
-                    // Rest of the video loading code remains the same...
+                    }                    
+        
                     data.file_urls.forEach((url, index) => {
                         const videoWrapper = document.createElement("div");
                         videoWrapper.className = "video-wrapper";
