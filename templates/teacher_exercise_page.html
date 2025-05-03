@@ -134,6 +134,12 @@
                     previewImage.src = e.target.result;
                     currentImageBase64 = e.target.result;
                     previewContainer.style.display = 'block';
+                    console.log("Image loaded successfully"); // Debug log
+                }
+                
+                reader.onerror = function(error) {
+                    console.error("Error reading image file:", error);
+                    alert("Error loading image. Please try another file.");
                 }
                 
                 reader.readAsDataURL(fileInput.files[0]);
