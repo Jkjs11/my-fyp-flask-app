@@ -105,68 +105,79 @@
 // Object to track uploaded videos per topic
 let uploadedVideosPerTopic = {};
 
-function uploadVideo(topicIndex) {
-    const input = document.getElementById(`upload-input-${topicIndex}`);
-    const videoContainer = document.getElementById(`video-container-${topicIndex}`);
-
-    // Initialize the list for this topic if it doesn't exist
-    if (!uploadedVideosPerTopic[topicIndex]) {
-        uploadedVideosPerTopic[topicIndex] = [];
-    }
-
-    // Clear any existing event listeners to prevent duplicates
-    input.replaceWith(input.cloneNode(true));
-    const newInput = document.getElementById(`upload-input-${topicIndex}`);
-
-    newInput.addEventListener('change', function() {
-        const files = Array.from(this.files);
-        const validFiles = files.filter(file => {
-            const fileType = file.type.split('/')[0];
-            const fileSizeMB = file.size / (1024 * 1024);
-            return fileType === 'video' && fileSizeMB <= 200;
-        });
-
-        if (validFiles.length === 0) {
-            alert('Please upload valid video files (up to 200MB).');
-            return;
+    function uploadVideo(topicIndex) {
+        const input = document.getElementById(`upload-input-${topicIndex}`);
+        const videoContainer = document.getElementById(`video-container-${topicIndex}`);
+    
+        if (!uploadedVideosPerTopic[topicIndex]) {
+            uploadedVideosPerTopic[topicIndex] = [];
         }
-
-        const formData = new FormData();
-        validFiles.forEach(file => {
-            formData.append('file', file);
-        });
-
-        formData.append('topic_index', topicIndex);
-
-        fetch('/upload', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+    
+        input.replaceWith(input.cloneNode(true));
+        const newInput = document.getElementById(`upload-input-${topicIndex}`);
+    
+        newInput.addEventListener('change', function() {
+            const files = Array.from(this.files);
+            console.log('Selected files:', files); // Log files to console
+            
+            const validFiles = files.filter(file => {
+                const fileType = file.type.split('/')[0];
+                const fileSizeMB = file.size / (1024 * 1024);
+                const isValid = fileType === 'video' && fileSizeMB <= 200;
+                if (!isValid) {
+                    console.warn(`Invalid file: ${file.name}, type: ${file.type}, size: ${fileSizeMB.toFixed(2)}MB`);
+                }
+                return isValid;
+            });
+    
+            if (validFiles.length === 0) {
+                alert('Please upload valid video files (up to 200MB).');
+                return;
             }
-            return response.json();
-        })
-        .then(data => {
-            if (data.file_urls && data.file_urls.length > 0) {
-                data.file_urls.forEach(url => {
-                    if (!uploadedVideosPerTopic[topicIndex].includes(url)) {
-                        addVideoToContainer(videoContainer, url);
-                        uploadedVideosPerTopic[topicIndex].push(url);
-                    }
-                });
-            }
-            newInput.value = '';
-        })
-        .catch(error => {
-            console.error('Error uploading videos:', error);
-            alert('Failed to upload videos. Please try again.');
+    
+            const formData = new FormData();
+            validFiles.forEach(file => {
+                formData.append('file', file);
+            });
+    
+            formData.append('topic_index', topicIndex);
+    
+            console.log('Uploading files...');
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.error || 'Upload failed');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Upload response:', data);
+                if (data.file_urls && data.file_urls.length > 0) {
+                    data.file_urls.forEach(url => {
+                        if (!uploadedVideosPerTopic[topicIndex].includes(url)) {
+                            addVideoToContainer(videoContainer, url);
+                            uploadedVideosPerTopic[topicIndex].push(url);
+                        }
+                    });
+                    alert('Videos uploaded successfully!');
+                } else {
+                    alert('No videos were uploaded. Please try again.');
+                }
+                newInput.value = '';
+            })
+            .catch(error => {
+                console.error('Error uploading videos:', error);
+                alert(`Failed to upload videos: ${error.message}`);
+            });
         });
-    });
-
-    newInput.click();
-}
+    
+        newInput.click();
+    }
 
     function deleteAllVideos(topicIndex) {
         const formData = new FormData();
