@@ -178,38 +178,33 @@
                 .then(data => {
                     const videoContainer = document.getElementById("video-container");
                     
-                    if (data.videos && data.videos.length > 0) {
+                    if (data.file_urls && data.file_urls.length > 0) {
                         statusElement.textContent = "";
                         statusElement.className = "status-message";
-                    
-                        const teacherInfoContainer = document.getElementById("teacher-info");
-                        teacherInfoContainer.innerHTML = ""; // Clear previous info
-                    
-                        const videoContainer = document.getElementById("video-container");
-                    
-                        data.videos.forEach((video, index) => {
-                            // Optional: Show who uploaded each video
-                            const teacherInfo = document.createElement("div");
-                            teacherInfo.textContent = `Uploaded by: ${video.teacher_name}`;
-                            teacherInfoContainer.appendChild(teacherInfo);
-                    
+                        
+                        // Display teacher info
+                        const teacherInfoElement = document.getElementById("teacher-info");
+                        teacherInfoElement.innerHTML = 
+                            `<p>Video uploaded by: <strong>${data.teacher_name || "Teacher"}</strong></p>`;
+                        
+                        data.file_urls.forEach((url, index) => {
                             const videoWrapper = document.createElement("div");
                             videoWrapper.className = "video-wrapper";
-                    
-                            const teacherLabel = document.createElement("p");
-                            teacherLabel.textContent = `Teacher: ${video.teacher_name}`;
-                            teacherLabel.style.fontWeight = "bold";
-                            videoWrapper.appendChild(teacherLabel);
-                    
+                            
                             const videoElement = document.createElement("video");
                             videoElement.controls = true;
-                            videoElement.src = video.file_url;
+                            videoElement.src = url;
                             videoElement.className = "topic-video";
+                            
+                            const videoTitle = document.createElement("p");
+                            videoTitle.textContent = extractTopicName(url) || `Video ${index + 1}`;
+                            videoTitle.className = "video-title";
+                            
+                            videoWrapper.appendChild(videoTitle);
                             videoWrapper.appendChild(videoElement);
-                    
                             videoContainer.appendChild(videoWrapper);
                         });
-                    
+                        
                         // Add button to start exercises
                         const startExercisesBtn = document.createElement("button");
                         startExercisesBtn.textContent = "Start Exercises";
@@ -224,7 +219,7 @@
                         statusElement.className = "status-message info";
                         document.getElementById("teacher-info").innerHTML = "";
                     }
-                
+                })
                 .catch(error => {
                     console.error("Error loading videos:", error);
                     statusElement.textContent = `Error loading videos: ${error.message}`;
@@ -283,8 +278,11 @@
                         statusElement.textContent = "";
                         statusElement.className = "status-message";
                         
-                       document.getElementById("exercise-teacher-info").innerHTML =
-    `                       <p>Exercise created by: <strong>${exercise.teacher_name}</strong></p>`;
+                        if (data.exercises[0].teacher_name) {
+                            teacherName = data.exercises[0].teacher_name;
+                        }
+                        document.getElementById("exercise-teacher-info").innerHTML = 
+                            `<p>Exercise created by: <strong>${teacherName}</strong></p>`;
                         
                         exercises = data.exercises;
                         currentExerciseIndex = 0;
@@ -330,12 +328,6 @@
                 const textElement = document.createElement("p");
                 textElement.textContent = exercise.question;
                 questionElement.appendChild(textElement);
-            }
-
-            if (exercise.teacher_name) {
-                const teacherInfo = document.createElement("p");
-                teacherInfo.innerHTML = `Created by: <strong>${exercise.teacher_name}</strong>`;
-                questionElement.appendChild(teacherInfo);
             }
             
             exerciseContainer.appendChild(questionElement);
