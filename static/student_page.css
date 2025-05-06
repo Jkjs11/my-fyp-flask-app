@@ -116,12 +116,18 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    margin-bottom: 20px; /* Space after video */
 }
 
 .video-title {
     font-weight: bold;
     margin: 0;
     color: #555;
+    margin-top: 20px; /* Space before next video's title */
+}
+
+.video-item {
+    margin-bottom: 30px; /* Space between videos */
 }
 
 .topic-video {
