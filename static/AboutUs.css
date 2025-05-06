@@ -5,6 +5,9 @@ body {
     background-position: center; /* Centers the image */
     font-family:Georgia, 'Times New Roman', Times, serif;
     font-size: larger;
+    min-height: 100vh;
+    width: 100%; /* Ensures full width */
+    margin: 0;    /* Removes default margin */    
 }
 
 ol{
