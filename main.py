@@ -419,28 +419,30 @@ def get_topic_videos():
         connection = get_db_connection()
         cursor = connection.cursor()
         
-        # Get all videos for this topic from all teachers
+        # Get all videos for this topic grouped by teacher
         query = """
-        SELECT v.FilePath, u.Name 
+        SELECT u.Name as teacher_name, GROUP_CONCAT(v.FilePath) as video_paths
         FROM videos v
         JOIN users u ON v.UserID = u.UserID
         WHERE u.Role = 'Teacher' AND v.TopicIndex = %s
-        ORDER BY v.UploadDate DESC
+        GROUP BY u.Name
+        ORDER BY u.Name
         """
         cursor.execute(query, (topic_index,))
-        videos = cursor.fetchall()
+        teacher_videos = cursor.fetchall()
         
-        if not videos:
-            return jsonify({"file_urls": [], "teachers": []})
+        if not teacher_videos:
+            return jsonify({"teacher_videos": []})
             
-        # Get unique teacher names
-        teachers = list(set([video[1] for video in videos if video[1]]))
-        file_urls = [video[0] for video in videos]
+        # Format the response
+        result = []
+        for teacher in teacher_videos:
+            result.append({
+                "teacher_name": teacher[0],
+                "video_urls": teacher[1].split(',')
+            })
         
-        return jsonify({
-            "file_urls": file_urls,
-            "teachers": teachers
-        })
+        return jsonify({"teacher_videos": result})
     except Exception as e:
         logging.error(f"Error fetching topic videos: {e}")
         return jsonify({"error": "An error occurred while fetching videos."}), 500
