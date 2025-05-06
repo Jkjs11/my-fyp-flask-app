@@ -188,7 +188,7 @@
                             teacherSection.className = "teacher-video-section";
                             
                             const teacherHeader = document.createElement("h3");
-                            teacherHeader.textContent = `Videos by ${teacherData.teacher_name}`;
+                            teacherHeader.textContent = `Video(s) by ${teacherData.teacher_name}`;
                             teacherSection.appendChild(teacherHeader);
                             
                             // Add videos for this teacher
@@ -223,7 +223,7 @@
                         };
                         videoContainer.appendChild(startExercisesBtn);
                     } else {
-                        statusElement.textContent = "No videos available for this topic yet.";
+                        statusElement.textContent = "No video(s) available for this topic yet.";
                         statusElement.className = "status-message info";
                     }
                 })
