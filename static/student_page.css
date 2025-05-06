@@ -139,6 +139,22 @@ h1 {
     line-height: 1.2;
 }
 
+/* Teacher video sections */
+.teacher-video-section {
+    margin-bottom: 30px;
+    padding: 15px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.teacher-video-section h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #3498db;
+}
+
 /* Exercise Section */
 .exercise-container {
     max-width: 500px;
