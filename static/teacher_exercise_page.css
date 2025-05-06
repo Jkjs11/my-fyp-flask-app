@@ -1,4 +1,6 @@
 body {
+    min-height: 100vh;
+    width: 100%; /* Ensures full width */
     font-family: Arial, sans-serif;
     text-align: center;
     margin: 0;
