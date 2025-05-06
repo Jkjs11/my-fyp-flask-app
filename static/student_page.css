@@ -103,6 +103,7 @@ h1 {
     flex-direction: column;
     gap: 1.5rem;
     align-items: center;
+    margin-bottom: 30px;
 }
 
 .video-wrapper,
