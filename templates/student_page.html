@@ -361,7 +361,7 @@
                 feedbackElement.className = "feedback-message correct";
         
                 // Play the correct answer sound
-                const correctSound = new Audio("{{ url_for('static', filename='audio/correctAnswerSound.mp3') }}");
+                const correctSound = new Audio("{{ url_for('static', filename='audio/correct.mp3') }}");
                 correctSound.play();
         
                 // Mark exercise as completed if not already
@@ -379,7 +379,7 @@
                 feedbackElement.className = "feedback-message incorrect";
         
                 // Play the incorrect answer sound
-                const incorrectSound = new Audio("{{ url_for('static', filename='audio/incorrectAnswerSound.mp3') }}");
+                const incorrectSound = new Audio("{{ url_for('static', filename='audio/retry.mp3') }}");
                 incorrectSound.play();
             }
         }
