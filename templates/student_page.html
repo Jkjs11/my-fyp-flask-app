@@ -350,7 +350,8 @@
 
         // Check if the selected answer is correct
         function checkAnswer(selectedIndex, correctIndex) {
-            playClickSound();
+            playClickSound(); // Plays the general button click sound
+        
             const feedbackElement = document.getElementById("feedback-message");
             
             if (selectedIndex === correctIndex) {
@@ -358,13 +359,17 @@
                 const randomFeedback = positiveFeedback[Math.floor(Math.random() * positiveFeedback.length)];
                 feedbackElement.textContent = randomFeedback;
                 feedbackElement.className = "feedback-message correct";
-                
+        
+                // Play the correct answer sound
+                const correctSound = new Audio("{{ url_for('static', filename='audio/correctAnswerSound.mp3') }}");
+                correctSound.play();
+        
                 // Mark exercise as completed if not already
                 if (!completedExercises.includes(currentExerciseIndex)) {
                     completedExercises.push(currentExerciseIndex);
                     updateProgress();
                 }
-                
+        
                 // Show next button
                 document.getElementById("next-exercise-btn").classList.remove("hidden");
             } else {
@@ -372,6 +377,10 @@
                 const randomFeedback = negativeFeedback[Math.floor(Math.random() * negativeFeedback.length)];
                 feedbackElement.textContent = randomFeedback;
                 feedbackElement.className = "feedback-message incorrect";
+        
+                // Play the incorrect answer sound
+                const incorrectSound = new Audio("{{ url_for('static', filename='audio/incorrectAnswerSound.mp3') }}");
+                incorrectSound.play();
             }
         }
 
