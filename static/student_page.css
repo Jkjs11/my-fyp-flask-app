@@ -171,8 +171,8 @@ h1 {
 }
 
 .question-number {
-    font-weight: bold;
-    font-size: 1.2em;
+    font-size: 1rem;
+    margin-top: 10px;
     margin-bottom: 10px;
     text-align: center;
     color: #333;
