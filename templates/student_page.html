@@ -61,9 +61,11 @@
                 <div id="exercise-progress">
                     <span id="completed-count">0</span> out of <span id="total-count">0</span> exercises completed
                 </div>
+                <div id="question-number" class="question-number"></div> <!-- New line added -->
                 <div id="current-exercise" class="exercise-container">
                     <!-- Exercise will be loaded here -->
                 </div>
+
                 <div id="feedback-message" class="feedback-message"></div>
                 <button id="next-exercise-btn" class="hidden" onclick="loadNextExercise(); playClickSound()">
                     Next Exercise <i class="fas fa-arrow-right"></i>
@@ -306,6 +308,10 @@
         function displayExercise(exercise) {
             const exerciseContainer = document.getElementById("current-exercise");
             exerciseContainer.innerHTML = "";
+            // Display question number
+            const questionNumberElement = document.getElementById("question-number");
+            questionNumberElement.textContent = `Question ${currentExerciseIndex + 1} of ${exercises.length}`;
+
             
             // Create question element
             const questionElement = document.createElement("div");
