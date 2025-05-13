@@ -12,6 +12,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='teacher_exercise_page.css') }}">
+
+    <!-- MathJax for rendering fractions like \frac{1}{2} -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
 </head>
 <body>
     <header>
@@ -45,7 +51,12 @@
         <input type="text" id="option2" placeholder="Option 2" />
         <input type="text" id="option3" placeholder="Option 3" />
         <input type="text" id="option4" placeholder="Option 4" />
-        <select id="correct-option">
+
+        <small>
+            You can use LaTeX for fractions, e.g. <code>\frac{1}{2}</code> will display as a proper fraction.
+        </small>
+        
+        <select id="correct-option"> 
             <option value="0">A</option>
             <option value="1">B</option>
             <option value="2">C</option>
@@ -102,11 +113,12 @@
                         ${exercise.question_image ? `<img src="${exercise.question_image}" alt="Question Image" style="max-width: 300px; max-height: 200px;"><br>` : ''}
                         <strong>Options:</strong>
                         <ul>
-                            <li>A. ${exercise.options[0]}</li>
-                            <li>B. ${exercise.options[1]}</li>
-                            <li>C. ${exercise.options[2]}</li>
-                            <li>D. ${exercise.options[3]}</li>
+                            <li>A. \\(${exercise.options[0]}\\)</li>
+                            <li>B. \\(${exercise.options[1]}\\)</li>
+                            <li>C. \\(${exercise.options[2]}\\)</li>
+                            <li>D. \\(${exercise.options[3]}\\)</li>
                         </ul>
+
                         <strong>Correct Answer:</strong> Option ${String.fromCharCode(65 + parseInt(exercise.correct_option))}
                     `;
                     const deleteButton = document.createElement("button");
@@ -115,6 +127,10 @@
                     deleteButton.onclick = () => deleteExercise(exercise.exercise_id);
                     div.appendChild(deleteButton);
                     exerciseList.appendChild(div);
+
+                    if (window.MathJax) {
+                        MathJax.typesetPromise([div]);
+                    }
                 });
             })
             .catch(error => {
