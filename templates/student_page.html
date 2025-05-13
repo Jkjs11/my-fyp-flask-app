@@ -17,6 +17,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
     <link rel="stylesheet" href="{{ url_for('static', filename='student_page.css') }}">
+
+    <!-- MathJax for rendering fractions -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
 </head>
 
 <body>
@@ -338,12 +344,21 @@
             
             exercise.options.forEach((option, index) => {
                 const optionBtn = document.createElement("button");
-                optionBtn.textContent = `${String.fromCharCode(65 + index)}. ${option}`;
+                optionBtn.innerHTML = `${String.fromCharCode(65 + index)}. \\(${option}\\)`;
                 optionBtn.onclick = () => checkAnswer(index, exercise.correct_option);
                 optionsContainer.appendChild(optionBtn);
             });
-            
+
+            // Trigger MathJax to render the new LaTeX content
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
+
             exerciseContainer.appendChild(optionsContainer);
+            
+            if (window.MathJax) {
+                MathJax.typesetPromise(); // Tells MathJax to re-render new content
+            }
             
             // Update teacher info for this specific exercise
             document.getElementById("exercise-teacher-info").innerHTML = 
